@@ -44,6 +44,13 @@ def traverse_folder(fd):
     return names, paths
 
 
+def get_filename(path):
+    path = os.path.realpath(path)
+    name_ext = path.split('/')[-1]
+    name = os.path.splitext(name_ext)[0]
+    return name
+
+
 def _convert_float32_to_int16(x):
     """Convert from float32 to int16. """
     if np.max(np.abs(x)) > 1.:
