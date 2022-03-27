@@ -4,7 +4,6 @@ import logging
 from sklearn import metrics
 from model.utils import forward
 
-from utils import forward
 from data.utils import get_filename
 from params import train_config
 

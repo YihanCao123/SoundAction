@@ -179,7 +179,7 @@ class Transfer_Cnn14(nn.Module):
             for param in self.base.parameters():
                 param.requires_grad = False
         
-        self.init_weights()
+        self.init_weight()
     
     def init_weight(self):
         init_layer(self.fc_transfer)
@@ -191,7 +191,7 @@ class Transfer_Cnn14(nn.Module):
     def forward(self, input, mixup_lambda=None):
         """Input: (batch_size, data_length)
         """
-        output_dict = self.base(input, mixup_lambda)
+        output_dict = self.base(input)
         embedding = output_dict['embedding']
         action_vector = output_dict['clipwise_output']
 

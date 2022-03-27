@@ -26,11 +26,11 @@ class hdf5_config:
 class train_config:
     """Training configs used in run_model.py. """
     sample_rate = 32000
-    window_size = 0
-    hop_size = 0
-    mel_bins = 0
-    fmin = 0
-    fmax = 0
-    classes_num = 0
+    window_size = 1024
+    hop_size = 320
+    mel_bins = 64
+    fmin = 50
+    fmax = 14000
+    classes_num = len(LABELS)
     freeze_base = True
     

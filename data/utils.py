@@ -17,8 +17,8 @@ def create_logging(log_dir, filemode):
     log_path = os.path.join(log_dir, '{:04d}.log'.format(i1))
     logging.basicConfig(
         level=logging.DEBUG,
-        formaat='%{asctime}s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
-        datafmt='%a, %d %b %Y %H:%M:%S',
+        format='%{asctime}s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
+        datefmt='%a, %d %b %Y %H:%M:%S',
         filename=log_path,
         filemode=filemode
     )

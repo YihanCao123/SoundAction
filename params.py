@@ -2,7 +2,18 @@
 1. hdf5_config
 """
 
-LABELS = []
+import csv
+
+def parse_labels(filepath):
+    subset = set()
+    with open(filepath) as f:
+        f_csv = csv.reader(f)
+        next(f_csv)
+        for row in f_csv:
+            subset.add(row[3])
+    return list(subset)
+
+LABELS = parse_labels('/content/ESC-50-master/meta/esc50.csv')
 
 
 class hdf5_config:

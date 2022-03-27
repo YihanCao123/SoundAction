@@ -47,26 +47,28 @@ def train(args):
     )
     create_folder(checkpoints_dir)
 
-    logs_dir = os.path.join(workspace, 'logs', filename,
-        'holdout_fold={}'.format(holdout_fold), model_type, 'pretrain={}'.format(pretrain),
-        'loss_type={}'.format(loss_type), 'augmentation={}'.format(augmentation),
-        'batch_size={}'.format(batch_size), 'freeze_base={}'.format(freeze_base)
-    )
-    create_logging(logs_dir, 'w')
-    logging.info(args)
+    #logs_dir = os.path.join(workspace, 'logs', filename,
+    #    'holdout_fold={}'.format(holdout_fold), model_type, 'pretrain={}'.format(pretrain),
+    #    'loss_type={}'.format(loss_type), 'augmentation={}'.format(augmentation),
+    #    'batch_size={}'.format(batch_size), 'freeze_base={}'.format(freeze_base)
+    #)
+    #create_logging(logs_dir, 'w')
+    #logging.info(args)
+    print('line57')
 
     # Model
     Model = eval(model_type) # This could be Model = Transfer_Cnn14() in our case, however, here for easy implementation, we will still use this.
+    print('line60')
     model = Model(train_config.sample_rate, train_config.window_size, train_config.hop_size, train_config.mel_bins,
     train_config.fmin, train_config.fmax, train_config.classes_num, train_config.freeze_base)
 
     if pretrain:
-        logging.info("Load pretrained model from {}".format(pretrained_checkpoint_path))
+        print("Load pretrained model from {}".format(pretrained_checkpoint_path))
         model.load_from_pretrain(pretrained_checkpoint_path)
 
     if resume_iteration:
         resume_checkpoint_path = os.path.join(checkpoints_dir, '{}_iterations.pth'.format(resume_iteration))
-        logging.info("Load resume model from {}".format(resume_checkpoint_path))
+        print("Load resume model from {}".format(resume_checkpoint_path))
         resume_checkpoint = torch.load(resume_checkpoint_path)
         model.load_state_dict(resume_checkpoint['model'])
         iteration = resume_checkpoint['iteration']
@@ -89,11 +91,13 @@ def train(args):
         batch_size=batch_size
     )
 
+    print('line94')
     # Data Loader
     train_loader = torch.utils.data.DataLoader(dataset=dataset,
         batch_sampler=train_sampler, collate_fn=collate_fn,
         num_workers=num_workers, pin_memory=True
     )
+    print('line100')
 
     validate_loader = torch.utils.data.DataLoader(dataset=dataset,
         batch_sampler=validate_sampler, collate_fn=collate_fn,
@@ -112,27 +116,30 @@ def train(args):
     evaluator = Eva(model=model)
 
     train_begin_time = time.time()
+    print(train_begin_time)
 
     # Train
+    print('Start Training')
     for batch_data_dict in train_loader:
         # Evaluate
         if iteration % 200 == 0 and iteration > 0:
             if resume_iteration > 0 and iteration == resume_iteration:
                 pass
             else:
-                logging.info("-----------------------------------------------")
-                logging.info("Iteration: {}".format(iteration))
+                print("-----------------------------------------------")
+                print("Iteration: {}".format(iteration))
 
                 train_fin_time = time.time()
                 statistics =  evaluator.evaluate(validate_loader)
-                logging.info("Validate accuracy: {:.3f}".format(statistics['accuracy']))
+                print("Validate accuracy: {:.3f}".format(statistics['accuracy']))
 
                 train_time = train_fin_time - train_begin_time
                 validate_time = time.time() - train_fin_time
 
+                '''
                 logging.info(
                     "Train time: {:.3f} s, validate time: {:.3f} s".format(train_time, validate_time)
-                )
+                )'''
 
                 train_begin_time = time.time()
         # Save
@@ -144,7 +151,7 @@ def train(args):
 
             checkpoint_path = os.path.join(checkpoints_dir, '{}_iterations.pth'.format(iteration))
             torch.save(checkpoint, checkpoint_path)
-            logging.info('Model saved to {}'.format(checkpoint_path))
+            print('Model saved to {}'.format(checkpoint_path))
 
         # Move data to GPU
         for key in batch_data_dict.keys():
@@ -159,7 +166,8 @@ def train(args):
 
         # loss
         loss = loss_func(batch_output_dict, batch_targets_dict)
-        print(iteration, loss)
+        if iteration % 200 == 0 and iteration > 0:
+            print(iteration, loss)
 
         # Backward
         optimizer.zero_grad()
@@ -184,7 +192,7 @@ if __name__ == '__main__':
     parser_train.add_argument("--holdout_fold", type=str, choices=['1', '2', '3', '4', '5'], required=True)
     parser_train.add_argument("--model_type", type=str, required=True)
     parser_train.add_argument("--pretrained_checkpoint_path", type=str)
-    parser_train.add_argument("--freeze_base", action='store_true', defaul=False)
+    parser_train.add_argument("--freeze_base", action='store_true', default=False)
     parser_train.add_argument("--loss_type", type=str, required=True)
     parser_train.add_argument("--augmentation", type=str, choices=['none', 'mixup'], required=True) # for easy implementation, I set it to False
     parser_train.add_argument("--learning_rate", type=float, required=True)
