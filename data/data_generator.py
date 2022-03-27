@@ -6,9 +6,6 @@ root
 |--- Class3 (# files)
 ....
 """
-from email import parser
-from turtle import shape
-from venv import create
 from params import hdf5_config as config
 import argparse
 import os
@@ -39,7 +36,6 @@ def pack_audio_files_to_hdf5(args):
     # Arguments
     dataset_dir = args.dataset_dir
     workspace = args.workspace
-    mini_data = args.mini_data
 
     sample_rate = config.sample_rate
     clip_samples = config.clip_samples
@@ -60,7 +56,7 @@ def pack_audio_files_to_hdf5(args):
     meta_dict = {
         'audio_name': np.array(audio_names),
         'audio_path': np.array(audio_paths),
-        'target': np.array([lb_to_idx[audio_name.split('.')[0]] for audio_name in audio_names]),
+        'target': np.array([lb_to_idx[audio_path.split('/')[3]] for audio_path in audio_paths]),
         'fold': np.arange(len(audio_names)) % 10 + 1 
     }
 
