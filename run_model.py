@@ -143,7 +143,8 @@ def train(args):
 
                 train_begin_time = time.time()
         # Save
-        if iteration % 2000 == 0 and iteration > 0:
+        '''
+        if iteration % 2000 == 0 or iteration > 0:
             checkpoint = {
                 'iteration': iteration,
                 'model': model.module.state_dict()
@@ -151,8 +152,8 @@ def train(args):
 
             checkpoint_path = os.path.join(checkpoints_dir, '{}_iterations.pth'.format(iteration))
             torch.save(checkpoint, checkpoint_path)
-            print('Model saved to {}'.format(checkpoint_path))
-
+            print('Model saved to {}'.format(checkpoint_path))'''
+            
         # Move data to GPU
         for key in batch_data_dict.keys():
             batch_data_dict[key] = move_data_to_device(batch_data_dict[key], device)
