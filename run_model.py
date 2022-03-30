@@ -34,7 +34,7 @@ def train(args):
     stop_iteration = args.stop_iteration
     device = 'cuda' if (args.cuda and torch.cuda.is_available()) else 'cpu'
     filename = args.filename
-    num_workers = 8
+    num_workers = 1
     loss_func = get_loss_func(loss_type)
     pretrain = True if pretrained_checkpoint_path else False
 

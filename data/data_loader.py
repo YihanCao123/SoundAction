@@ -146,6 +146,7 @@ class TrainSampler:
 
 class EvaluateSampler:
     def __init__(self, hdf5_path, holdout_fold, batch_size, random_seed=1234):
+        self.random_state = np.random.RandomState(random_seed)
         self.hdf5_path = hdf5_path
         self.batch_size=  batch_size
 
@@ -154,6 +155,9 @@ class EvaluateSampler:
 
         self.indexes = np.where(self.folds == int(holdout_fold))[0]
         self.audios_num = len(self.indexes)
+
+        # Shuffle indexes
+        self.random_state.shuffle(self.indexes)
 
     def __iter__(self):
         """Generate batch meta for training. """
@@ -176,6 +180,37 @@ class EvaluateSampler:
             pointer += batch_size
             yield batch_meta
 
+class TrainEvaluateSampler:
+    def __init__(self, hdf5_path, holdout_fold, batch_size, random_seed=1234):
+        self.hdf5_path = hdf5_path
+        self.batch_size=  batch_size
+
+        with h5py.File(hdf5_path, 'r') as hf:
+            self.folds = hf['fold'][:].astype(np.float32)
+
+        self.indexes = np.where(self.folds != int(holdout_fold))[0]
+        self.audios_num = len(self.indexes)
+
+    def __iter__(self):
+        """Generate batch meta for training. """
+        batch_size = self.batch_size
+        pointer = 0
+
+        while pointer < self.batch_size:
+            batch_indexes = np.arange(
+                pointer, min(pointer + batch_size, self.audios_num)
+            )
+
+            batch_meta = []
+
+            for i in batch_indexes:
+                batch_meta.append({
+                    'hdf5_path': self.hdf5_path,
+                    'index_in_hdf5': self.indexes[i]
+                })
+
+            pointer += batch_size
+            yield batch_meta
 
 def collate_fn(list_data_dict):
     """Collate data.
