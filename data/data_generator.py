@@ -6,6 +6,12 @@ root
 |--- Class3 (# files)
 ....
 """
+
+# importing sys
+import sys
+  
+# adding Folder_2/subfolder to the system path
+sys.path.insert(0, '/content/SoundAction')
 from params import hdf5_config as config
 import argparse
 import os
@@ -48,10 +54,9 @@ def pack_audio_files_to_hdf5(args):
     packed_hdf5_path = os.path.join(workspace, "features", "waveform.h5")
     create_folder(os.path.dirname(packed_hdf5_path))
 
-    (audio_names, audio_paths) = traverse_folder(audios_dir)
-
-    audio_names = sorted(audio_names)
-    audio_paths = sorted(audio_paths)
+    audio_names, audio_paths = traverse_folder(audios_dir)
+    print(audio_names)
+    print(audio_paths)
 
     meta_dict = {
         'audio_name': np.array(audio_names),

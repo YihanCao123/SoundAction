@@ -13,7 +13,8 @@ def parse_labels(filepath):
             subset.add(row[3])
     return list(subset)
 
-LABELS = parse_labels('/content/ESC-50-master/meta/esc50.csv')
+LABELS = ['airplane', 'breathing','car_horn','cat']
+#parse_labels('/content/ESC-50-master/meta/esc50.csv')
 
 
 class hdf5_config:

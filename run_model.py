@@ -122,7 +122,7 @@ def train(args):
     print('Start Training')
     for batch_data_dict in train_loader:
         # Evaluate
-        if iteration % 200 == 0 and iteration > 0:
+        if iteration % 100 == 0 and iteration > 0:
             if resume_iteration > 0 and iteration == resume_iteration:
                 pass
             else:
@@ -167,7 +167,7 @@ def train(args):
 
         # loss
         loss = loss_func(batch_output_dict, batch_targets_dict)
-        if iteration % 200 == 0 and iteration > 0:
+        if iteration % 100 == 0 and iteration > 0:
             print(iteration, loss)
 
         # Backward

@@ -8,6 +8,8 @@ from data.utils import get_filename
 from params import train_config
 
 def calculate_acc(y_true, y_pred):
+    print('y_true', np.argmax(y_true, axis=-1))
+    print('y_pred',np.argmax(y_pred, axis=-1))
     N = y_true.shape[0]
     acc = np.sum(np.argmax(y_true, axis=-1) == np.argmax(y_pred, axis=-1)) / N
     return acc
