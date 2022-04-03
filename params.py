@@ -11,16 +11,17 @@ def parse_labels(filepath):
         next(f_csv)
         for row in f_csv:
             subset.add(row[3])
-    return list(subset)
+    return sorted(list(subset))
 
-LABELS = ['airplane', 'breathing','car_horn','cat']
-#parse_labels('/content/ESC-50-master/meta/esc50.csv')
+LABELS = parse_labels('/content/ESC-50-master/meta/esc50.csv')
+
+#['airplane', 'breathing','cat','car_horn']
 
 
 class hdf5_config:
     """HDF5 configs used in data_loader.py. """
     sample_rate = 32000
-    clip_samples = sample_rate * 30
+    clip_samples = sample_rate * 5
     classes_num = len(LABELS)
     lb_to_idx = {lb: idx for idx, lb in enumerate(LABELS)}
     idx_to_lb = {idx: lb for idx, lb in enumerate(LABELS)}

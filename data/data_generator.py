@@ -22,6 +22,18 @@ import librosa
 
 from utils import create_folder, traverse_folder, _convert_float32_to_int16
 
+import csv
+
+def parse_label_dict(filepath, label_lst):
+    label_dict = {}
+    with open(filepath) as f:
+        f_csv = csv.reader(f)
+        next(f_csv)
+        for row in f_csv:
+            if row[3] in label_lst:
+                label_dict[row[0]] = row[3]
+    return label_dict
+
 
 def to_one_hot(k, classes_num):
     target = np.zeros(classes_num)
@@ -55,8 +67,12 @@ def pack_audio_files_to_hdf5(args):
     create_folder(os.path.dirname(packed_hdf5_path))
 
     audio_names, audio_paths = traverse_folder(audios_dir)
-    print(audio_names)
-    print(audio_paths)
+
+
+    # validation
+    label_dict = parse_label_dict('/content/ESC-50-master/meta/esc50.csv', ['airplane', 'breathing','cat','car_horn'])
+    #for i in range(len(audio_names)):
+      #print(audio_names[i], audio_paths[i].split('/')[3], lb_to_idx[audio_paths[i].split('/')[3]], label_dict[audio_names[i]] == audio_paths[i].split('/')[3])
 
     meta_dict = {
         'audio_name': np.array(audio_names),
@@ -95,7 +111,6 @@ def pack_audio_files_to_hdf5(args):
         )
 
         for n in range(audios_num):
-            print(n)
             audio_name = meta_dict['audio_name'][n]
             fold = meta_dict['fold'][n]
             audio_path = meta_dict['audio_path'][n]
