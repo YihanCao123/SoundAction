@@ -41,12 +41,13 @@ class AudioDataset:
             audio_name = hf['audio_name'][index_in_hdf5].decode()
             waveform = _convert_int16_to_float32(hf['waveform'][index_in_hdf5])
             target = hf['target'][index_in_hdf5].astype(np.float32)
+            fold_num =  hf['target'][index_in_hdf5]
             #print('data_loader*************************')
             #print(audio_name, target)
             #print((waveform == 0).sum()/len(waveform), (waveform == 0).sum(), len(waveform))
 
         data_dict = {
-            'audio_name': audio_name, 'waveform': waveform, 'target': target
+            'audio_name': audio_name, 'waveform': waveform, 'target': target, 'fold_num': fold_num
         }
 
         return data_dict
@@ -168,7 +169,7 @@ class EvaluateSampler:
         batch_size = self.batch_size
         pointer = 0
 
-        while pointer < self.batch_size:
+        while pointer < self.audios_num:
             batch_indexes = np.arange(
                 pointer, min(pointer + batch_size, self.audios_num)
             )
@@ -200,7 +201,7 @@ class TrainEvaluateSampler:
         batch_size = self.batch_size
         pointer = 0
 
-        while pointer < self.batch_size:
+        while pointer < self.audios_num:
             batch_indexes = np.arange(
                 pointer, min(pointer + batch_size, self.audios_num)
             )

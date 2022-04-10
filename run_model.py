@@ -54,11 +54,10 @@ def train(args):
     #)
     #create_logging(logs_dir, 'w')
     #logging.info(args)
-    print('line57')
 
     # Model
     Model = eval(model_type) # This could be Model = Transfer_Cnn14() in our case, however, here for easy implementation, we will still use this.
-    print('line60')
+
     model = Model(train_config.sample_rate, train_config.window_size, train_config.hop_size, train_config.mel_bins,
     train_config.fmin, train_config.fmax, train_config.classes_num, train_config.freeze_base)
 
@@ -91,13 +90,12 @@ def train(args):
         batch_size=batch_size
     )
 
-    print('line94')
+
     # Data Loader
     train_loader = torch.utils.data.DataLoader(dataset=dataset,
         batch_sampler=train_sampler, collate_fn=collate_fn,
         num_workers=num_workers, pin_memory=True
     )
-    print('line100')
 
     validate_loader = torch.utils.data.DataLoader(dataset=dataset,
         batch_sampler=validate_sampler, collate_fn=collate_fn,
@@ -116,7 +114,6 @@ def train(args):
     evaluator = Eva(model=model)
 
     train_begin_time = time.time()
-    print(train_begin_time)
 
     # Train
     print('Start Training')

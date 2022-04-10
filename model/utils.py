@@ -12,18 +12,19 @@ def move_data_to_device(x, device):
     
     return x.to(device)
 
-def append_to_dict(dict, key, val):
-    if key in dict.keys():
-        dict[key].append(val)
+def append_to_dict(dct, key, val):
+    if key in dct.keys():
+        dct[key].append(val)
     else:
-        dict[key] = [val]
+        dct[key] = [val]
 
 def forward(model, generator, return_input=False, return_target=False):
     output_dict = {}
     device = next(model.parameters()).device
-
-    for n, batch_data_dict in enumerate(generator):
-        print(n)
+    i = 0
+    for batch_data_dict in generator:
+        print(i)
+        i += 1
         batch_waveform = move_data_to_device(batch_data_dict['waveform'], device)
 
         with torch.no_grad():

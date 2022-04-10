@@ -59,6 +59,7 @@ def pack_audio_files_to_hdf5(args):
     clip_samples = config.clip_samples
     classes_num = config.classes_num
     lb_to_idx = config.lb_to_idx
+    fold_dict = config.fold_dict
 
     # Paths
     audios_dir = os.path.join(dataset_dir)
@@ -70,16 +71,18 @@ def pack_audio_files_to_hdf5(args):
 
 
     # validation
-    label_dict = parse_label_dict('/content/ESC-50-master/meta/esc50.csv', ['airplane', 'breathing','cat','car_horn'])
+    # label_dict = parse_label_dict('/content/ESC-50-master/meta/esc50.csv', ['airplane', 'breathing','cat','car_horn'])
     #for i in range(len(audio_names)):
       #print(audio_names[i], audio_paths[i].split('/')[3], lb_to_idx[audio_paths[i].split('/')[3]], label_dict[audio_names[i]] == audio_paths[i].split('/')[3])
 
+    print(audio_names)
     meta_dict = {
         'audio_name': np.array(audio_names),
         'audio_path': np.array(audio_paths),
         'target': np.array([lb_to_idx[audio_path.split('/')[3]] for audio_path in audio_paths]),
-        'fold': np.arange(len(audio_names)) % 10 + 1 
+        'fold': np.array([fold_dict[audio_name] for audio_name in audio_names]),
     }
+    print(np.array([fold_dict[audio_name] for audio_name in audio_names]))
 
     audios_num = len(meta_dict['audio_name'])
 
