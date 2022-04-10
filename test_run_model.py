@@ -47,17 +47,7 @@ def train(args):
     )
     create_folder(checkpoints_dir)
 
-    #logs_dir = os.path.join(workspace, 'logs', filename,
-    #    'holdout_fold={}'.format(holdout_fold), model_type, 'pretrain={}'.format(pretrain),
-    #    'loss_type={}'.format(loss_type), 'augmentation={}'.format(augmentation),
-    #    'batch_size={}'.format(batch_size), 'freeze_base={}'.format(freeze_base)
-    #)
-    #create_logging(logs_dir, 'w')
-    #logging.info(args)
-
-    # Model
     Model = eval(model_type) # This could be Model = Transfer_Cnn14() in our case, however, here for easy implementation, we will still use this.
-
     model = Model(train_config.sample_rate, train_config.window_size, train_config.hop_size, train_config.mel_bins,
     train_config.fmin, train_config.fmax, train_config.classes_num, train_config.freeze_base)
 
@@ -84,18 +74,24 @@ def train(args):
         batch_size=batch_size
     )
 
+
+
     validate_sampler = EvaluateSampler(
         hdf5_path=hdf5_path,
         holdout_fold=holdout_fold,
         batch_size=batch_size
     )
 
-
+    print('line94')
     # Data Loader
     train_loader = torch.utils.data.DataLoader(dataset=dataset,
         batch_sampler=train_sampler, collate_fn=collate_fn,
         num_workers=num_workers, pin_memory=True
     )
+
+    for x in train_loader:
+        return
+    print('line100')
 
     validate_loader = torch.utils.data.DataLoader(dataset=dataset,
         batch_sampler=validate_sampler, collate_fn=collate_fn,
@@ -114,6 +110,7 @@ def train(args):
     evaluator = Eva(model=model)
 
     train_begin_time = time.time()
+    print(train_begin_time)
 
     # Train
     print('Start Training')
