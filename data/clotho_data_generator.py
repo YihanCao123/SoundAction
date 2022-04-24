@@ -116,7 +116,7 @@ def pack_audio_files_to_hdf5(args):
         hf.create_dataset(
             name='caption',
             shape=(audios_num,),
-            dtype=np.string_
+            dtype='S80'
         )
 
         for n in range(audios_num):

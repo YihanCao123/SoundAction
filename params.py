@@ -18,19 +18,19 @@ import csv
 # FOLD_DICT, LABELS = parse_labels('/content/ESC-50-master/meta/esc50.csv')
 
 def parse_caption(filepath):
-    caption_dict = {}
+    fold_dict = {}
     with open(filepath) as f:
         f_csv = csv.reader(f)
         next(f_csv)
         for row in f_csv:
             fold_dict[row[0]] = row[1]
-    return caption_dict
+    return fold_dict
 
 
 #['airplane', 'breathing','cat','car_horn']
 
-FOLD_DICT, LABELS = [], []
-CAPTION_DICT = parse_caption('')
+FOLD_DICT, LABELS = [], [1]
+CAPTION_DICT = parse_caption('/content/clotho_captions_evaluation.csv')
 class hdf5_config:
     """HDF5 configs used in data_loader.py. """
     sample_rate = 41400
