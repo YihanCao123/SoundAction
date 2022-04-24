@@ -8,6 +8,7 @@ from data.utils import _convert_int16_to_float32
 
 class AudioDataset:
     """ Creates a dataset object. """
+
     def __init__(self):
         """This class takes the meta of an audio clip as input and return
         the waveform and target of the audio clip. This class is used by DataLoader.
@@ -35,19 +36,19 @@ class AudioDataset:
         """
         hdf5_path = meta['hdf5_path']
         index_in_hdf5 = meta['index_in_hdf5']
-        
 
         with h5py.File(hdf5_path, 'r') as hf:
             audio_name = hf['audio_name'][index_in_hdf5].decode()
             waveform = _convert_int16_to_float32(hf['waveform'][index_in_hdf5])
             target = hf['target'][index_in_hdf5].astype(np.float32)
-            fold_num =  hf['target'][index_in_hdf5]
-            #print('data_loader*************************')
-            #print(audio_name, target)
-            #print((waveform == 0).sum()/len(waveform), (waveform == 0).sum(), len(waveform))
+            fold_num = hf['fold'][index_in_hdf5].astype(np.float32)
+            caption = hf['caption'][index_in_hdf5].astype(np.string_)
+            # print('data_loader*************************')
+            # print(audio_name, target)
+            # print((waveform == 0).sum()/len(waveform), (waveform == 0).sum(), len(waveform))
 
         data_dict = {
-            'audio_name': audio_name, 'waveform': waveform, 'target': target, 'fold_num': fold_num
+            'audio_name': audio_name, 'waveform': waveform, 'target': target, 'fold_num': fold_num, 'caption': caption
         }
 
         return data_dict
@@ -55,6 +56,7 @@ class AudioDataset:
 
 class Base:
     """ Creates a dataset object. """
+
     def __init__(self, indexes_hdf5_path, batch_size, random_seed):
         """Base class of train sampler.
         Args:
@@ -73,6 +75,7 @@ class Base:
             self.indexes_in_hdf5 = hf['index_in_hdf5'][:]
             self.targets = hf['target'][:].astype(np.float32)
             self.folds = hf['fold'][:].astype(np.float32)
+            self.caption = hf['caption'][:].astype(np.string_)
 
         (self.audios_num, self.classes_num) = self.targets.shape
 
@@ -153,7 +156,7 @@ class EvaluateSampler:
     def __init__(self, hdf5_path, holdout_fold, batch_size, random_seed=1234):
         self.random_state = np.random.RandomState(random_seed)
         self.hdf5_path = hdf5_path
-        self.batch_size=  batch_size
+        self.batch_size = batch_size
 
         with h5py.File(hdf5_path, 'r') as hf:
             self.folds = hf['fold'][:].astype(np.float32)
@@ -185,10 +188,11 @@ class EvaluateSampler:
             pointer += batch_size
             yield batch_meta
 
+
 class TrainEvaluateSampler:
     def __init__(self, hdf5_path, holdout_fold, batch_size, random_seed=1234):
         self.hdf5_path = hdf5_path
-        self.batch_size=  batch_size
+        self.batch_size = batch_size
 
         with h5py.File(hdf5_path, 'r') as hf:
             self.folds = hf['fold'][:].astype(np.float32)
@@ -216,6 +220,7 @@ class TrainEvaluateSampler:
 
             pointer += batch_size
             yield batch_meta
+
 
 def collate_fn(list_data_dict):
     """Collate data.

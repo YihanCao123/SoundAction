@@ -13,7 +13,7 @@ def create_logging(log_dir, filemode):
     i1 = 0
     while os.path.isfile(os.path.join(log_dir, '{:04d}.log'.format(i1))):
         i1 += 1
-    
+
     log_path = os.path.join(log_dir, '{:04d}.log'.format(i1))
     logging.basicConfig(
         level=logging.DEBUG,
@@ -32,6 +32,7 @@ def create_logging(log_dir, filemode):
 
     return logging
 
+
 def traverse_folder(fd):
     paths = []
     names = []
@@ -40,7 +41,7 @@ def traverse_folder(fd):
             filepath = os.path.join(root, name)
             names.append(name)
             paths.append(filepath)
-    
+
     return names, paths
 
 
@@ -61,3 +62,7 @@ def _convert_float32_to_int16(x):
 def _convert_int16_to_float32(x):
     """Convert from int16 to float32. """
     return (x / 32767.).astype(np.float32)
+
+
+if __name__ == '__main__':
+    print(traverse_folder('../dummy'))
