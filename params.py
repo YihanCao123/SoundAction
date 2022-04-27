@@ -4,6 +4,19 @@
 
 import csv
 
+from random import randint
+def generate_negative(caption_dict, number_neg):
+    key_lst = list(caption_dict.keys())
+    key_len = len(key_lst)
+    correct_range = len(caption_dict[key_lst[0]])
+    for idx in range(key_len):
+        for _ in range(number_neg):
+            neg_idx = randint(0, key_len - 1)
+            while neg_idx == idx:
+                neg_idx = randint(0, key_len - 1)
+            caption_dict[key_lst[idx]].append(caption_dict[key_lst[neg_idx]][randint(0, correct_range-1)])
+    return caption_dict
+
 # def parse_labels(filepath):
 #     subset = set()
 #     fold_dict = {}
@@ -23,14 +36,16 @@ def parse_caption(filepath):
         f_csv = csv.reader(f)
         next(f_csv)
         for row in f_csv:
-            fold_dict[row[0]] = row[1]
+            fold_dict[row[0]] = [row[1], row[2], row[3], row[4], row[5]]
     return fold_dict
 
 
 #['airplane', 'breathing','cat','car_horn']
 
+NUM_NEG = 2
+
 FOLD_DICT, LABELS = [], [1]
-CAPTION_DICT = parse_caption('/content/clotho_captions_evaluation.csv')
+CAPTION_DICT = generate_negative(parse_caption('/content/clotho_captions_development.csv'), NUM_NEG)
 class hdf5_config:
     """HDF5 configs used in data_loader.py. """
     sample_rate = 41400
@@ -40,6 +55,7 @@ class hdf5_config:
     idx_to_lb = {idx: lb for idx, lb in enumerate(LABELS)}
     fold_dict = FOLD_DICT
     caption_dict = CAPTION_DICT
+    num_negaitve = NUM_NEG
 
 
 class train_config:

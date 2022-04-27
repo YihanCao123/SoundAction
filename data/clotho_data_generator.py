@@ -60,6 +60,7 @@ def pack_audio_files_to_hdf5(args):
     lb_to_idx = config.lb_to_idx
     fold_dict = config.fold_dict
     caption_dict = config.caption_dict
+    num_negative = config.num_negaitve
 
     # Paths
     audios_dir = os.path.join(dataset_dir)
@@ -74,13 +75,17 @@ def pack_audio_files_to_hdf5(args):
     # for i in range(len(audio_names)):
     # print(audio_names[i], audio_paths[i].split('/')[3], lb_to_idx[audio_paths[i].split('/')[3]], label_dict[audio_names[i]] == audio_paths[i].split('/')[3])
 
+    name_np_lst = np.array(audio_names)
+    audio_path_np_lst = np.array(audio_paths)
+    target_lst = [1] * 5
+    target_neg = np.array([target_lst.extend([0]*num_negative) for i in range(5*len(audio_paths))]).reshape(-1)
     # print(audio_names)
     meta_dict = {
-        'audio_name': np.array(audio_names),
-        'audio_path': np.array(audio_paths),
-        'target': np.array([0 for audio_path in audio_paths]),
-        'fold': np.array([i % 10 for i in range(len(audio_paths))]),
-        'caption': np.array([caption_dict[audio_name] for audio_name in audio_names]),
+        'audio_name': np.repeat(name_np_lst, 5 + num_negative),
+        'audio_path': np.repeat(audio_path_np_lst, 5+num_negative),
+        'target': target_neg,
+        'fold': np.array([i % 5 for i in range(5*len(audio_paths))]),
+        'caption': (np.array([caption_dict[audio_name] for audio_name in audio_names])).reshape(-1),
     }
     # print(np.array([fold_dict[audio_name] for audio_name in audio_names]))
 
@@ -119,19 +124,26 @@ def pack_audio_files_to_hdf5(args):
             dtype='S80'
         )
 
-        for n in range(audios_num):
+        energy = 5 + num_negative
+        storage = energy
+        for n in range(audios_num):            
             audio_name = meta_dict['audio_name'][n]
             fold = meta_dict['fold'][n]
+            print(energy, audio_name, meta_dict['caption'][n])
             audio_path = meta_dict['audio_path'][n]
-            (audio, fs) = librosa.core.load(audio_path, sr=sample_rate, mono=True)
-
-            audio = pad_truncate_sequence(audio, clip_samples)
+            if energy == storage:
+                (audio, fs) = librosa.core.load(audio_path, sr=sample_rate, mono=True)
+                audio = pad_truncate_sequence(audio, clip_samples)
+                int16_audio = _convert_float32_to_int16(audio)
+            energy -= 1
+            if energy == 0:
+                energy = storage
 
             hf['audio_name'][n] = audio_name.encode()
-            hf['waveform'][n] = _convert_float32_to_int16(audio)
+            hf['waveform'][n] = int16_audio
             hf['target'][n] = to_one_hot(meta_dict['target'][n], classes_num)
             hf['fold'][n] = meta_dict['fold'][n]
-            hf['caption'][n] = meta_dict['caption'][n]
+            hf['caption'][n] = meta_dict['caption'][n].encode()
 
     print("Write hdf5 to {}".format(packed_hdf5_path))
     print("Time {:.3f} s".format(time.time() - feature_time))
