@@ -158,7 +158,7 @@ def train(args):
         # Train
         model.train()
 
-        batch_output_dict = model(batch_data_dict['waveform'], None)
+        batch_output_dict = model(batch_data_dict['waveform'], ["[CLS] " + element.decode("utf-8") + " [SEP]" for element in batch_data_dict['caption']])
         
         batch_targets_dict = {'target': batch_data_dict['target']}
 

@@ -247,8 +247,10 @@ class bertEmbedding(nn.Module):
         self.modelInput = BertModel.from_pretrained('bert-base-uncased', output_hidden_states=True)
 
     def forward(self, x):
-        marked_text = "[CLS] " + x + " [SEP]"
-        tokenized_text = self.tokenizer.tokenize(marked_text)
+        print(type(x))
+        #print(x.shape)
+        #tokenized_text = self.tokenizer.tokenize(x)
+        tokenized_text = self.tokenizer.batch_encode(x, None, add_special_tokens=False)
         indexed_tokens = self.tokenizer.convert_tokens_to_ids(tokenized_text)
         tokens_tensor = torch.tensor(indexed_tokens)
         outputs = self.modelInput(tokens_tensor)
@@ -264,9 +266,10 @@ class ConcatCLS(nn.Module):
                  fmin, fmax, classes_num, freeze_base, text_input_size = 768, audio_input_size = 2048, units = 1024):
         super().__init__()
         self.bert_encoder = bertEmbedding()  # bertEmbedding()
+        audioset_classes_num = 527
         # self, sample_rate, window_size, hop_size, mel_bins, fmin, fmax, classes_num
         self.audio_encoder = Cnn14(sample_rate, window_size, hop_size, mel_bins,
-                                   fmin, fmax, classes_num)  # Cnn14()
+                                   fmin, fmax, audioset_classes_num)  # Cnn14()
         self.project_bert = ProjectionLayer(text_input_size, units)
         self.project_audio = ProjectionLayer(audio_input_size, units)
         # TODO: tensrodot
@@ -275,7 +278,7 @@ class ConcatCLS(nn.Module):
         checkpoint = torch.load(pretrained_checkpoint_path)
         self.audio_encoder.load_state_dict(checkpoint['model'])
 
-    def forward(self, text_input, audio_input):
+    def forward(self, audio_input, text_input):
         text_output = self.bert_encoder(text_input)  # shape: (bs, hidden)
         audio_output = self.audio_encoder(audio_input)  # shape: (bs, 2048)
         p_bert = self.project_bert(text_output)  # output shape: (batch_size, unit)

@@ -118,11 +118,12 @@ def train(args):
         for key in batch_data_dict.keys():
             batch_data_dict[key] = move_data_to_device(batch_data_dict[key], device)
 
-        print(batch_data_dict['waveform'])
+        #print(batch_data_dict['waveform'])
         
-        print(batch_data_dict['caption'])
+        print(np.array([element.decode("utf-8") for element in batch_data_dict['caption']]))
+        
 
-        print(batch_data_dict['fold_num'])
+        #print(batch_data_dict['fold_num'])
 
     # for batch_data_dict in train_loader:
         
