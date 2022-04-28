@@ -13,7 +13,7 @@ from model.utils import move_data_to_device
 from params import train_config
 from data.utils import create_folder, create_logging, get_filename
 from data.data_loader import AudioDataset, TrainSampler, EvaluateSampler, collate_fn
-from model.models import Transfer_Cnn14
+from model.models import ConcatCLS
 from model.losses import get_loss_func
 from model.evaluate import Eva
 
@@ -163,13 +163,14 @@ def train(args):
         batch_targets_dict = {'target': batch_data_dict['target']}
 
         # loss
-        loss = loss_func(batch_output_dict, batch_targets_dict)
+        loss = nn.CrossEntropyLoss()
+        output = loss(batch_output_dict, batch_targets_dict)
         if iteration % 100 == 0 and iteration > 0:
-            print(iteration, loss)
+            print(iteration, output)
 
         # Backward
         optimizer.zero_grad()
-        loss.backward()
+        output.backward()
         optimizer.step()
 
         # Stop
