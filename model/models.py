@@ -234,34 +234,6 @@ class ProjectionLayer(nn.Module):
         x = input
         output = self.projection(input)
         return output
-
-
-class ConcatCLS(nn.Module):
-    """ Classification Layer.
-    """
-
-    def __init__(self, text_input_size, audio_input_size, units, bert_encoder, audio_encoder):
-        super().__init__()
-        self.bert_encoder = bert_encoder
-        self.audio_encoder = audio_encoder
-        self.project_bert = ProjectionLayer(text_input_size, units)
-        self.project_audio = ProjectionLayer(audio_input_size, units)
-        # TODO: tensrodot
-
-    def forward(self, text_input, audio_input):
-        text_output = self.bert_encoder(text_input)
-        audio_output = self.audio_encoder(audio_input)
-        p_bert = self.project_bert(text_output)  # output shape: (batch_size, unit)
-        p_audio = self.project_audio(audio_output)  # shape: (batch_size, unit)
-        # TODO: c = torch.tensordot(a, b, dims=2).cpu()
-        logits = torch.tensordot(p_bert, p_audio, dims=1)
-        # if loss is cross_entropy_with_logits
-        # just return logits
-        # if loss is cross_entropy_without_logits
-        logits = torch.sigmoid(logits)
-        return logits
-
-
 import torch.nn as nn
 import torch.nn.functional as F
 from pytorch_transformers import BertTokenizer
@@ -283,6 +255,36 @@ class bertEmbedding(nn.Module):
 
         pooled_output = outputs[1]
         return pooled_output
+
+class ConcatCLS(nn.Module):
+    """ Classification Layer.
+    """
+
+    def __init__(self, text_input_size, audio_input_size, units, sample_rate, window_size, hop_size, mel_bins,
+                 fmin, fmax, classes_num, freeze_base):
+        super().__init__()
+        self.bert_encoder = bertEmbedding()  # bertEmbedding()
+        self.audio_encoder = Cnn14(sample_rate, window_size, hop_size, mel_bins,
+                                   fmin, fmax, classes_num, freeze_base)  # Cnn14()
+        self.project_bert = ProjectionLayer(text_input_size, units)
+        self.project_audio = ProjectionLayer(audio_input_size, units)
+        # TODO: tensrodot
+
+    def forward(self, text_input, audio_input):
+        text_output = self.bert_encoder(text_input)  # shape: (bs, hidden)
+        audio_output = self.audio_encoder(audio_input)  # shape: (bs, 2048)
+        p_bert = self.project_bert(text_output)  # output shape: (batch_size, unit)
+        p_audio = self.project_audio(audio_output)  # shape: (batch_size, unit)
+        # TODO: c = torch.tensordot(a, b, dims=2).cpu()
+        logits = torch.tensordot(p_bert, p_audio, dims=1)
+        # if loss is cross_entropy_with_logits
+        # just return logits
+        # if loss is cross_entropy_without_logits
+        logits = torch.sigmoid(logits)
+        return logits
+
+
+
 
 
 
