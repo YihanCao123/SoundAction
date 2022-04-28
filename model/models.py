@@ -238,7 +238,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from pytorch_transformers import BertTokenizer
 from pytorch_transformers import BertModel
-
+import numpy as np
 
 class bertEmbedding(nn.Module):
     def __init__(self):
@@ -250,10 +250,14 @@ class bertEmbedding(nn.Module):
         print(type(x))
         #print(x.shape)
         #tokenized_text = self.tokenizer.tokenize(x)
-        tokenized_text = self.tokenizer.batch_encode(x, None, add_special_tokens=False)
-        indexed_tokens = self.tokenizer.convert_tokens_to_ids(tokenized_text)
-        tokens_tensor = torch.tensor(indexed_tokens)
+        # tokenized_text = self.tokenizer.batch_encode_plus(x, None, add_special_tokens=False)
+        # indexed_tokens = self.tokenizer.convert_tokens_to_ids(tokenized_text)
+        # tokens_tensor = torch.tensor(indexed_tokens)
+        tokens_tensor = torch.LongTensor([[ 101, 1037, 8494, 20043, 5005, 1997, 3714, 3149, 1997, 1996, 2694, 102], [ 101, 1037, 8494, 20043, 5005, 1997, 3714, 3149, 1997, 1996, 2694, 102]]).cuda()
+        
+        print('Success', tokens_tensor)
         outputs = self.modelInput(tokens_tensor)
+        print('Success', outputs[1].shape)
 
         pooled_output = outputs[1]
         return pooled_output
