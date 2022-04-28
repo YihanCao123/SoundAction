@@ -207,6 +207,100 @@ class Transfer_Cnn14(nn.Module):
 
         return outputs
 
+
+import torch.nn as nn
+import torch
+
+class ProjectionLayer(nn.Module):
+    """ Classification Layer.
+    """
+
+    def __init__(self, input_size, units):
+        super().__init__()
+        self.input_size = input_size
+        self.units = units
+
+        # Projection
+        self.projection = nn.Linear(input_size, self.units, bias=False)
+
+        self.init_weight()
+
+    def init_weight(self):
+        init_layer(self.projection)
+
+    def forward(self, input):
+        x = input
+        output = self.projection(input)
+        return output
+
+
+class ConcatCLS(nn.Module):
+    """ Classification Layer.
+    """
+
+    def __init__(self, text_input_size, audio_input_size, units, bert_encoder, audio_encoder):
+        super().__init__()
+        self.bert_encoder = bert_encoder
+        self.audio_encoder = audio_encoder
+        self.project_bert = ProjectionLayer(text_input_size, units)
+        self.project_audio = ProjectionLayer(audio_input_size, units)
+        # TODO: tensrodot
+
+    def forward(self, text_input, audio_input):
+        text_output = self.bert_encoder(text_input)
+        audio_output = self.audio_encoder(audio_input)
+        p_bert = self.project_bert(text_output)  # output shape: (batch_size, unit)
+        p_audio = self.project_audio(audio_output)  # shape: (batch_size, unit)
+        # TODO: c = torch.tensordot(a, b, dims=2).cpu()
+        logits = torch.tensordot(p_bert, p_audio, dims=1)
+        # if loss is cross_entropy_with_logits
+        # just return logits
+        # if loss is cross_entropy_without_logits
+        logits = torch.sigmoid(logits)
+        return logits
+
+import torch.nn as nn
+import torch.nn.functional as F
+from pytorch_transformers import BertTokenizer
+from pytorch_transformers import BertModel
+
+class bertEmbedding(nn.Module):
+    def __init__(self):
+      super().__init__()
+      self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+      self.modelInput = BertModel.from_pretrained('bert-base-uncased',output_hidden_states=True)
+
+    def forward(self, x):
+      model.train()
+      marked_text = "[CLS] " + x + " [SEP]"
+      tokenized_text = self.tokenizer.tokenize(marked_text)
+      indexed_tokens = self.tokenizer.convert_tokens_to_ids(tokenized_text)
+      tokens_tensor = torch.tensor(indexed_tokens)
+      outputs = self.modelInput(tokens_tensor)
+
+      # can use last hidden state as word embeddings
+      last_hidden_state = outputs[0]
+      word_embed_1 = last_hidden_state
+
+      hidden_states = outputs[2]
+
+      # initial embeddings can be taken from 0th layer of hidden states
+      word_embed_2 = hidden_states[0]
+
+      # sum of all hidden states
+      word_embed_3 = torch.stack(hidden_states).sum(0)
+
+      # sum of second to last layer
+      word_embed_4 = torch.stack(hidden_states[2:]).sum(0)
+
+      # sum of last four layer
+      word_embed_5 = torch.stack(hidden_states[-4:]).sum(0)
+
+      #concat last four layers
+
+      word_embed_6 = torch.cat([hidden_states[i] for i in [-1,-2,-3,-4]], dim=-1)[:,0,:]
+      print(word_embed_6.shape)
+      return word_embed_6
         
 
 
