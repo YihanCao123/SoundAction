@@ -259,16 +259,21 @@ class bertEmbedding(nn.Module):
 class ConcatCLS(nn.Module):
     """ Classification Layer.
     """
-
-    def __init__(self, text_input_size, audio_input_size, units, sample_rate, window_size, hop_size, mel_bins,
-                 fmin, fmax, classes_num, freeze_base):
+    #def __init__(self, sample_rate, window_size, hop_size, mel_bins, fmin, fmax, classes_num, freeze_base):
+    def __init__(self, sample_rate, window_size, hop_size, mel_bins,
+                 fmin, fmax, classes_num, freeze_base, text_input_size = 768, audio_input_size = 2048, units = 1024):
         super().__init__()
         self.bert_encoder = bertEmbedding()  # bertEmbedding()
+        # self, sample_rate, window_size, hop_size, mel_bins, fmin, fmax, classes_num
         self.audio_encoder = Cnn14(sample_rate, window_size, hop_size, mel_bins,
-                                   fmin, fmax, classes_num, freeze_base)  # Cnn14()
+                                   fmin, fmax, classes_num)  # Cnn14()
         self.project_bert = ProjectionLayer(text_input_size, units)
         self.project_audio = ProjectionLayer(audio_input_size, units)
         # TODO: tensrodot
+
+    def load_from_pretrain(self, pretrained_checkpoint_path):
+        checkpoint = torch.load(pretrained_checkpoint_path)
+        self.audio_encoder.load_state_dict(checkpoint['model'])
 
     def forward(self, text_input, audio_input):
         text_output = self.bert_encoder(text_input)  # shape: (bs, hidden)

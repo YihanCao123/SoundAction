@@ -56,7 +56,7 @@ def train(args):
     #logging.info(args)
 
     # Model
-    Model = eval(model_type) # This could be Model = Transfer_Cnn14() in our case, however, here for easy implementation, we will still use this.
+    Model = ConcatCLS # This could be Model = Transfer_Cnn14() in our case, however, here for easy implementation, we will still use this.
 
     model = Model(train_config.sample_rate, train_config.window_size, train_config.hop_size, train_config.mel_bins,
     train_config.fmin, train_config.fmax, train_config.classes_num, train_config.freeze_base)
