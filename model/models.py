@@ -276,7 +276,7 @@ class ConcatCLS(nn.Module):
                                    fmin, fmax, audioset_classes_num)  # Cnn14()
         self.project_bert = ProjectionLayer(text_input_size, units)
         self.project_audio = ProjectionLayer(audio_input_size, units)
-        #self.last = nn.Linear(units,1, bias=False)
+        self.last = nn.Linear(units,1, bias=False)
         # TODO: tensrodot
 
     def load_from_pretrain(self, pretrained_checkpoint_path):
@@ -293,20 +293,20 @@ class ConcatCLS(nn.Module):
         #logits = torch.tensordot(p_bert, p_audio, dims=1)
         #print('p_bert.shape', p_bert.shape)
         #print('p_audio', p_audio.shape)
-        #logits = p_bert.mul(p_audio)
+        logits = p_bert.mul(p_audio)
 
         # if loss is cross_entropy_with_logits
         # just return logits
         # if loss is cross_entropy_without_logits
-        #logits = self.last(logits)
+        logits = self.last(logits)
         #print("logits_shape",logits.shape)
-        #logits = torch.sigmoid(logits)
+        logits = torch.sigmoid(logits)
         print(p_bert.shape)
         print(p_audio.shape)
         print(torch.reshape(torch.cosine_similarity(p_bert, p_audio, dim=1),(32,1)).shape)
         print(torch.reshape(torch.cosine_similarity(p_bert, p_audio, dim=1),(32,1)))
         
-        return torch.reshape(torch.cosine_similarity(p_bert, p_audio, dim=1),(32,1))
+        return logits
 
 
 
