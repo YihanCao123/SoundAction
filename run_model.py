@@ -16,6 +16,12 @@ from data.data_loader import AudioDataset, TrainSampler, EvaluateSampler, collat
 from model.models import ConcatCLS
 from model.losses import get_loss_func
 from model.evaluate import Eva
+from pytorch_transformers import BertTokenizer
+from pytorch_transformers import BertModel
+
+## Load pretrained model/tokenizer
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertModel.from_pretrained('bert-base-uncased',output_hidden_states=True)
 
 def train(args):
 
@@ -119,7 +125,7 @@ def train(args):
     print('Start Training')
     for batch_data_dict in train_loader:
         # Evaluate
-        if iteration % 100 == 0 and iteration > 0:
+        if iteration % 2 == 0 and iteration > 0:
             if resume_iteration > 0 and iteration == resume_iteration:
                 pass
             else:
@@ -158,14 +164,19 @@ def train(args):
         # Train
         model.train()
 
-        batch_output_dict = model(batch_data_dict['waveform'], ["[CLS] " + element.decode("utf-8") + " [SEP]" for element in batch_data_dict['caption']])
+        # batch_output_dict = model(batch_data_dict['waveform'], [tokenizer.convert_tokens_to_ids(tokenizer.tokenize("[CLS] " + element.decode("utf-8") + " [SEP]")) for element in batch_data_dict['caption']])
+        batch_output_dict = model(batch_data_dict['waveform'], [element.decode("utf-8") for element in batch_data_dict['caption']])
         
-        batch_targets_dict = {'target': batch_data_dict['target']}
+        #batch_targets_dict = {'target': batch_data_dict['target']}
 
         # loss
         loss = nn.CrossEntropyLoss()
-        output = loss(batch_output_dict, batch_targets_dict)
-        if iteration % 100 == 0 and iteration > 0:
+        # print("batch_out_put_dict:",batch_output_dict)
+        # print("batch_out_out_dict_shape",batch_output_dict.shape)
+        # print("batch_data_dict['target']",batch_data_dict['target'])
+        # print("batch_data_dict['target']_shape",batch_output_dict.shape)
+        output = loss(batch_output_dict, batch_data_dict['target'])
+        if iteration % 2 == 0 and iteration > 0:
             print(iteration, output)
 
         # Backward
