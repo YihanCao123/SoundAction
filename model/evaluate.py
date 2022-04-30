@@ -30,7 +30,9 @@ class Eva:
         output = output_dict['predict_target']
         target = output_dict['target']
         print('eval')
+        print(output)
+        print(target)
         
-        statistics = {'accuracy': np.mean(np.abs(output - target) < 0.5), 'confusion_matrix': None}
+        statistics = {'accuracy': np.mean((target - (output > 0)) == 0), 'confusion_matrix': None}
 
         return statistics

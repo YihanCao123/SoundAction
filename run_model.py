@@ -172,18 +172,18 @@ def train(args):
         # print("batch_out_out_dict_shape",batch_output_dict.shape)
         # print("batch_data_dict['target']",batch_data_dict['target'])
         # print("batch_data_dict['target']_shape",batch_output_dict.shape)
-        output = loss(batch_output_dict, batch_data_dict['target'])
+        output_loss = loss(torch.reshape(batch_output_dict,(32, 1)), batch_data_dict['target'])
         # for i in range(len(batch_output_dict)):
         #     print(batch_output_dict[i], batch_data_dict['target'][i])
         # if iteration % 2 == 0 and iteration > 0:
         #     print(iteration, output)
         
         if iteration % 10 == 0 and iteration > 0:
-            print('Iteration Number', iteration)
+            print('Iteration Number: {} Loss: {}'.format(iteration, output_loss))
 
         # Backward
         optimizer.zero_grad()
-        output.backward()
+        output_loss.backward()
         optimizer.step()
 
         # Stop
