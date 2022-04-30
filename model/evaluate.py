@@ -27,10 +27,10 @@ class Eva:
             return_target=True
         )
 
-        clipwise_output = output_dict['predict_target']
+        output = output_dict['predict_target']
         target = output_dict['target']
         print('eval')
         
-        statistics = {'accuracy': np.mean(np.abs(clipwise_output - target) < 0.5), 'confusion_matrix': None}
+        statistics = {'accuracy': np.mean(np.abs(output - target) < 0.5), 'confusion_matrix': None}
 
         return statistics
