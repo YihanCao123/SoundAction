@@ -234,6 +234,7 @@ class ProjectionLayer(nn.Module):
         x = input
         output = self.projection(input)
         return output
+
 import torch.nn as nn
 import torch.nn.functional as F
 # from pytorch_transformers import BertTokenizer
@@ -267,7 +268,6 @@ class bertEmbedding(nn.Module):
 class ConcatCLS(nn.Module):
     """ Classification Layer.
     """
-    #def __init__(self, sample_rate, window_size, hop_size, mel_bins, fmin, fmax, classes_num, freeze_base):
     def __init__(self, sample_rate, window_size, hop_size, mel_bins,
                  fmin, fmax, classes_num, freeze_base, text_input_size = 768*MAX_LEN, audio_input_size = 2048, units = 1024):
         super().__init__()
@@ -303,8 +303,6 @@ class ConcatCLS(nn.Module):
         logits = self.last(logits)
         #print("logits_shape",logits.shape)
         logits = torch.sigmoid(logits)
-
-        # print(logits)
         
         return logits
 
