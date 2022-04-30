@@ -293,8 +293,8 @@ class ConcatCLS(nn.Module):
         p_audio = self.project_audio(audio_output['embedding'])  # shape: (batch_size, unit)
         # TODO: c = torch.tensordot(a, b, dims=2).cpu()
         #logits = torch.tensordot(p_bert, p_audio, dims=1)
-        print('p_bert.shape', p_bert.shape)
-        print('p_audio', p_audio.shape)
+        # print('p_bert.shape', p_bert.shape)
+        # print('p_audio', p_audio.shape)
         logits = p_bert.mul(p_audio)
 
         # if loss is cross_entropy_with_logits
@@ -303,6 +303,8 @@ class ConcatCLS(nn.Module):
         logits = self.last(logits)
         #print("logits_shape",logits.shape)
         logits = torch.sigmoid(logits)
+
+        # print(logits)
         
         return logits
 

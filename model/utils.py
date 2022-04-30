@@ -23,19 +23,17 @@ def forward(model, generator, return_input=False, return_target=False):
     device = next(model.parameters()).device
     i = 0
     for batch_data_dict in generator:
-        print(i)
+        print('Evluation iteration: ', i)
         i += 1
         batch_waveform = move_data_to_device(batch_data_dict['waveform'], device)
 
         with torch.no_grad():
             model.eval()
-            batch_output = model(batch_waveform)
+            batch_output = model(batch_waveform, [element.decode("utf-8") for element in batch_data_dict['caption']])
         
         append_to_dict(output_dict, 'audio_name', batch_data_dict['audio_name'])
 
-        append_to_dict(output_dict, 'clipwise_output',
-            batch_output['clipwise_output'].data.cpu().numpy()
-        )
+        append_to_dict(output_dict, 'predict_target', batch_output.data.cpu().numpy())
 
         if return_input:
             append_to_dict(output_dict, 'waveform', batch_data_dict['waveform'])

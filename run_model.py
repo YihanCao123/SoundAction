@@ -125,7 +125,7 @@ def train(args):
     print('Start Training')
     for batch_data_dict in train_loader:
         # Evaluate
-        if iteration % 2 == 0 and iteration > 0:
+        if iteration % 100 == 0 and iteration > 0:
             if resume_iteration > 0 and iteration == resume_iteration:
                 pass
             else:
@@ -139,10 +139,7 @@ def train(args):
                 train_time = train_fin_time - train_begin_time
                 validate_time = time.time() - train_fin_time
 
-                '''
-                logging.info(
-                    "Train time: {:.3f} s, validate time: {:.3f} s".format(train_time, validate_time)
-                )'''
+
 
                 train_begin_time = time.time()
         # Save
@@ -176,8 +173,13 @@ def train(args):
         # print("batch_data_dict['target']",batch_data_dict['target'])
         # print("batch_data_dict['target']_shape",batch_output_dict.shape)
         output = loss(batch_output_dict, batch_data_dict['target'])
-        if iteration % 2 == 0 and iteration > 0:
-            print(iteration, output)
+        # for i in range(len(batch_output_dict)):
+        #     print(batch_output_dict[i], batch_data_dict['target'][i])
+        # if iteration % 2 == 0 and iteration > 0:
+        #     print(iteration, output)
+        
+        if iteration % 10 == 0 and iteration > 0:
+            print('Iteration Number', iteration)
 
         # Backward
         optimizer.zero_grad()

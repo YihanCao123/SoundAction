@@ -27,12 +27,10 @@ class Eva:
             return_target=True
         )
 
-        clipwise_output = output_dict['clipwise_output']
+        clipwise_output = output_dict['predict_target']
         target = output_dict['target']
-
-        cm = metrics.confusion_matrix(np.argmax(target, axis=-1), np.argmax(clipwise_output, axis=-1), labels=None)
-        acc = calculate_acc(target, clipwise_output)
-
-        statistics = {'accuracy': acc, 'confusion_matrix': cm}
+        print('eval')
+        
+        statistics = {'accuracy': np.mean(np.abs(clipwise_output - target) < 0.5), 'confusion_matrix': None}
 
         return statistics
