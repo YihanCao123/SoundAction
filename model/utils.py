@@ -21,10 +21,7 @@ def append_to_dict(dct, key, val):
 def forward(model, generator, return_input=False, return_target=False):
     output_dict = {}
     device = next(model.parameters()).device
-    i = 0
     for batch_data_dict in generator:
-        print('Evluation iteration: ', i)
-        i += 1
         batch_waveform = move_data_to_device(batch_data_dict['waveform'], device)
 
         with torch.no_grad():
@@ -41,7 +38,8 @@ def forward(model, generator, return_input=False, return_target=False):
         if return_target:
             if 'target' in batch_data_dict.keys():
                 append_to_dict(output_dict, 'target', batch_data_dict['target'])
-    
+
+                
     for key in output_dict.keys():
         output_dict[key] = np.concatenate(output_dict[key], axis=0)
         

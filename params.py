@@ -66,5 +66,5 @@ class train_config:
     mel_bins = 64
     fmin = 50
     fmax = 14000
-    classes_num = len(LABELS)
+    classes_num = 2
     freeze_base = True

@@ -286,8 +286,10 @@ class ConcatCLS(nn.Module):
                                    fmin, fmax, audioset_classes_num)  # Cnn14()
         self.project_bert = ProjectionLayer(text_input_size, units)
         self.project_audio = ProjectionLayer(audio_input_size, units)
+
         # self.last = nn.Linear(units,1, bias=False)
         # self.sig = nn.Sigmoid()
+
         self.cos = nn.CosineSimilarity(dim=1, eps=1e-6)
         self.unfla = UnFlatten()
         self.sig = nn.Sigmoid()
@@ -306,7 +308,6 @@ class ConcatCLS(nn.Module):
         # logits = torch.mul(p_bert, p_audio)
         # logits = self.last(logits)
         # logits = self.sig(logits)
-
         # return logits
 
         # cosine similarity

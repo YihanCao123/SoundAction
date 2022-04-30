@@ -16,8 +16,6 @@ from data.data_loader import AudioDataset, TrainSampler, EvaluateSampler, collat
 from model.models import ConcatCLS
 from model.losses import get_loss_func
 from model.evaluate import Eva
-from pytorch_transformers import BertTokenizer
-from pytorch_transformers import BertModel
 
 ## Load pretrained model/tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
@@ -142,7 +140,7 @@ def train(args):
         # loss
         output_loss = loss(batch_output_dict, batch_data_dict['target'])
         
-        if iteration % 10 == 0 and iteration > 0:
+        if iteration % 50 == 0 and iteration > 0:
             print('Iteration Number: {} Loss: {}'.format(iteration, float(output_loss)))
 
         # Backward
