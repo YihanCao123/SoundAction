@@ -30,12 +30,12 @@ def forward(model, generator, return_input=False, return_target=False):
     for batch_data_dict in generator:
         print(i)
         i += 1
-        batch_waveform = move_data_to_device(batch_data_dict['waveform'], device)
+        #batch_waveform = move_data_to_device(batch_data_dict['waveform'], device)
 
         with torch.no_grad():
             model.eval()
-            batch_output = model(batch_waveform)
-            #batch_output = model(batch_data_dict['waveform'], [tokenizer.convert_tokens_to_ids(tokenizer.tokenize("[CLS] " + element.decode("utf-8") + " [SEP]")) for element in batch_data_dict['caption']])
+            #batch_output = model(batch_waveform)
+            batch_output = model(batch_data_dict['waveform'], [tokenizer.convert_tokens_to_ids(tokenizer.tokenize("[CLS] " + element.decode("utf-8") + " [SEP]")) for element in batch_data_dict['caption']])
         
         append_to_dict(output_dict, 'audio_name', batch_data_dict['audio_name'])
 
