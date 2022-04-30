@@ -32,7 +32,9 @@ class Eva:
         print('eval')
         print(output)
         print(target)
+
+        #  np.mean((target - (output > 0)) == 0)
         
-        statistics = {'accuracy': np.mean((target - (output > 0)) == 0), 'confusion_matrix': None}
+        statistics = {'accuracy': np.mean(np.abs(output - target) < 0.5), 'confusion_matrix': None}
 
         return statistics

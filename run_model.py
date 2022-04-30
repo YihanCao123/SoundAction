@@ -120,11 +120,36 @@ def train(args):
     evaluator = Eva(model=model)
 
     train_begin_time = time.time()
+    
+    loss = nn.BCELoss()
+    
+    model.train()
 
     # Train
     print('Start Training')
     for batch_data_dict in train_loader:
-        # Evaluate
+                # Move data to GPU
+        for key in batch_data_dict.keys():
+            batch_data_dict[key] = move_data_to_device(batch_data_dict[key], device)
+
+        optimizer.zero_grad()
+        # Train
+        # batch_output_dict = model(batch_data_dict['waveform'], [tokenizer.convert_tokens_to_ids(tokenizer.tokenize("[CLS] " + element.decode("utf-8") + " [SEP]")) for element in batch_data_dict['caption']])
+        batch_output_dict = model(batch_data_dict['waveform'], [element.decode("utf-8") for element in batch_data_dict['caption']])
+
+        # for idx in range(len(batch_output_dict)):
+        #     print(batch_output_dict[idx], batch_data_dict['target'][idx])
+        # loss
+        output_loss = loss(batch_output_dict, batch_data_dict['target'])
+        
+        if iteration % 10 == 0 and iteration > 0:
+            print('Iteration Number: {} Loss: {}'.format(iteration, float(output_loss)))
+
+        # Backward
+        output_loss.backward()
+        optimizer.step()
+
+          # Evaluate
         if iteration % 100 == 0 and iteration > 0:
             if resume_iteration > 0 and iteration == resume_iteration:
                 pass
@@ -142,49 +167,6 @@ def train(args):
 
 
                 train_begin_time = time.time()
-        # Save
-        '''
-        if iteration % 2000 == 0 or iteration > 0:
-            checkpoint = {
-                'iteration': iteration,
-                'model': model.module.state_dict()
-            }
-
-            checkpoint_path = os.path.join(checkpoints_dir, '{}_iterations.pth'.format(iteration))
-            torch.save(checkpoint, checkpoint_path)
-            print('Model saved to {}'.format(checkpoint_path))'''
-            
-        # Move data to GPU
-        for key in batch_data_dict.keys():
-            batch_data_dict[key] = move_data_to_device(batch_data_dict[key], device)
-
-        # Train
-        model.train()
-
-        # batch_output_dict = model(batch_data_dict['waveform'], [tokenizer.convert_tokens_to_ids(tokenizer.tokenize("[CLS] " + element.decode("utf-8") + " [SEP]")) for element in batch_data_dict['caption']])
-        batch_output_dict = model(batch_data_dict['waveform'], [element.decode("utf-8") for element in batch_data_dict['caption']])
-        
-        #batch_targets_dict = {'target': batch_data_dict['target']}
-
-        # loss
-        loss = nn.CrossEntropyLoss()
-        # print("batch_out_put_dict:",batch_output_dict)
-        # print("batch_out_out_dict_shape",batch_output_dict.shape)
-        # print("batch_data_dict['target']",batch_data_dict['target'])
-        # print("batch_data_dict['target']_shape",batch_output_dict.shape)
-        output_loss = loss(torch.reshape(batch_output_dict,(32, 1)), batch_data_dict['target'])
-        # for i in range(len(batch_output_dict)):
-        #     print(batch_output_dict[i], batch_data_dict['target'][i])
-        # if iteration % 2 == 0 and iteration > 0:
-        #     print(iteration, output)
-        
-        if iteration % 10 == 0 and iteration > 0:
-            print('Iteration Number: {} Loss: {}'.format(iteration, output_loss))
-
-        # Backward
-        optimizer.zero_grad()
-        output_loss.backward()
-        optimizer.step()
 
         # Stop
         if iteration == stop_iteration:
