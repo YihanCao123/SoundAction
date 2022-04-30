@@ -247,20 +247,14 @@ class bertEmbedding(nn.Module):
         self.modelInput = BertModel.from_pretrained('bert-base-uncased', output_hidden_states=True)
 
     def forward(self, x):
-        print(type(x))
-        #print(x.shape)
-        #tokenized_text = self.tokenizer.tokenize(x)
-        # tokenized_text = self.tokenizer.batch_encode_plus(x, None, add_special_tokens=False)
-        # indexed_tokens = self.tokenizer.convert_tokens_to_ids(tokenized_text)
-        # tokens_tensor = torch.tensor(indexed_tokens)
-        tokens_tensor = torch.LongTensor([[ 101, 1037, 8494, 20043, 5005, 1997, 3714, 3149, 1997, 1996, 2694, 102], [ 101, 1037, 8494, 20043, 5005, 1997, 3714, 3149, 1997, 1996, 2694, 102]]).cuda()
-        
-        print('Success', tokens_tensor)
-        outputs = self.modelInput(tokens_tensor)
-        print('Success', outputs[1].shape)
-
-        pooled_output = outputs[1]
-        return pooled_output
+        result = []
+        for token in x:
+          tokens_tensor = torch.LongTensor([token]).cuda()
+          outputs = self.modelInput(tokens_tensor)
+          pooled_output2 = outputs[1]  
+          result.append(pooled_output2)
+        output = torch.cat(result,dim=0)
+        return output
 
 class ConcatCLS(nn.Module):
     """ Classification Layer.
@@ -276,6 +270,7 @@ class ConcatCLS(nn.Module):
                                    fmin, fmax, audioset_classes_num)  # Cnn14()
         self.project_bert = ProjectionLayer(text_input_size, units)
         self.project_audio = ProjectionLayer(audio_input_size, units)
+        self.last = nn.Linear(units,1, bias=False)
         # TODO: tensrodot
 
     def load_from_pretrain(self, pretrained_checkpoint_path):
@@ -286,13 +281,18 @@ class ConcatCLS(nn.Module):
         text_output = self.bert_encoder(text_input)  # shape: (bs, hidden)
         audio_output = self.audio_encoder(audio_input)  # shape: (bs, 2048)
         p_bert = self.project_bert(text_output)  # output shape: (batch_size, unit)
-        p_audio = self.project_audio(audio_output)  # shape: (batch_size, unit)
+        p_audio = self.project_audio(audio_output['embedding'])  # shape: (batch_size, unit)
         # TODO: c = torch.tensordot(a, b, dims=2).cpu()
-        logits = torch.tensordot(p_bert, p_audio, dims=1)
+        #logits = torch.tensordot(p_bert, p_audio, dims=1)
+        logits = p_bert.mul(p_audio)
+
         # if loss is cross_entropy_with_logits
         # just return logits
         # if loss is cross_entropy_without_logits
+        logits = self.last(logits)
+        #print("logits_shape",logits.shape)
         logits = torch.sigmoid(logits)
+        
         return logits
 
 

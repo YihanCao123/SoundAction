@@ -1,6 +1,11 @@
 import torch
 import numpy as np
+from pytorch_transformers import BertTokenizer
+from pytorch_transformers import BertModel
 
+## Load pretrained model/tokenizer
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertModel.from_pretrained('bert-base-uncased',output_hidden_states=True)
 
 def move_data_to_device(x, device):
     if 'float' in str(x.dtype):
@@ -30,6 +35,7 @@ def forward(model, generator, return_input=False, return_target=False):
         with torch.no_grad():
             model.eval()
             batch_output = model(batch_waveform)
+            #batch_output = model(batch_data_dict['waveform'], [tokenizer.convert_tokens_to_ids(tokenizer.tokenize("[CLS] " + element.decode("utf-8") + " [SEP]")) for element in batch_data_dict['caption']])
         
         append_to_dict(output_dict, 'audio_name', batch_data_dict['audio_name'])
 
