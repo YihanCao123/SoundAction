@@ -17,7 +17,6 @@ import h5py
 import librosa
 import csv
 
-# adding Folder_2/subfolder to the system path
 sys.path.insert(0, '/content/SoundAction')
 from params import hdf5_config as config
 from utils import create_folder, traverse_folder, _convert_float32_to_int16
@@ -70,26 +69,27 @@ def pack_audio_files_to_hdf5(args):
 
     audio_names, audio_paths = traverse_folder(audios_dir)
 
-    # validation
-    # label_dict = parse_label_dict('/content/ESC-50-master/meta/esc50.csv', ['airplane', 'breathing','cat','car_horn'])
-    # for i in range(len(audio_names)):
-    # print(audio_names[i], audio_paths[i].split('/')[3], lb_to_idx[audio_paths[i].split('/')[3]], label_dict[audio_names[i]] == audio_paths[i].split('/')[3])
+    assert len(audio_names) == len(audio_paths), 'Different Length for audio name and path'
 
-    name_np_lst = np.array(audio_names)
-    audio_path_np_lst = np.array(audio_paths)
-    target_lst = [1] * 5
-    target_neg = np.array([target_lst.extend([0]*num_negative) for i in range(5*len(audio_paths))]).reshape(-1)
-    # print(audio_names)
+    repeated_audio_name =  np.repeat(np.array(audio_names), 5 + num_negative)
+    repeated_audio_path = np.repeat(np.array(audio_paths), 5 + num_negative)
+    target_neg = np.array([([1, 1, 1, 1, 1] + [0] * num_negative) for i in range(len(audio_paths))]).reshape(-1)
+    fold_np = np.random.permutation(len(target_neg)) % 5
+    caption_np = (np.array([caption_dict[audio_name] for audio_name in audio_names])).reshape(-1)
+
+    assert len(target_neg) == len(repeated_audio_path), 'Different Length for target and path'
+    assert len(target_neg) == len(repeated_audio_name), 'Different Length for audio name and target'
+    assert len(target_neg) == len(caption_np), 'Different Length for audio caption and target'
+
     meta_dict = {
-        'audio_name': np.repeat(name_np_lst, 5 + num_negative),
-        'audio_path': np.repeat(audio_path_np_lst, 5+num_negative),
+        'audio_name': repeated_audio_name,
+        'audio_path': repeated_audio_path,
         'target': target_neg,
-        'fold': np.array([i % 5 for i in range(5*len(audio_paths))]),
-        'caption': (np.array([caption_dict[audio_name] for audio_name in audio_names])).reshape(-1),
+        'fold': fold_np,
+        'caption': caption_np,
     }
-    # print(np.array([fold_dict[audio_name] for audio_name in audio_names]))
 
-    audios_num = len(meta_dict['audio_name'])
+    audios_num = len(repeated_audio_name)
 
     feature_time = time.time()
 
@@ -126,22 +126,26 @@ def pack_audio_files_to_hdf5(args):
 
         energy = 5 + num_negative
         storage = energy
-        for n in range(audios_num):            
+        for n in range(audios_num):
+
             audio_name = meta_dict['audio_name'][n]
             fold = meta_dict['fold'][n]
-            print(energy, audio_name, meta_dict['caption'][n])
             audio_path = meta_dict['audio_path'][n]
+
+            print('{}/{} name: {}, caption: {}'.format(n+1, audios_num, audio_name, meta_dict['caption'][n]))
+
             if energy == storage:
                 (audio, fs) = librosa.core.load(audio_path, sr=sample_rate, mono=True)
                 audio = pad_truncate_sequence(audio, clip_samples)
                 int16_audio = _convert_float32_to_int16(audio)
+            
             energy -= 1
             if energy == 0:
                 energy = storage
 
             hf['audio_name'][n] = audio_name.encode()
             hf['waveform'][n] = int16_audio
-            hf['target'][n] = to_one_hot(meta_dict['target'][n], classes_num)
+            hf['target'][n] = meta_dict['target'][n] #to_one_hot(meta_dict['target'][n], classes_num)
             hf['fold'][n] = meta_dict['fold'][n]
             hf['caption'][n] = meta_dict['caption'][n].encode()
 
