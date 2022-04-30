@@ -241,8 +241,6 @@ import torch.nn.functional as F
 from transformers import BertTokenizer, BertModel
 import numpy as np
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-MAX_LEN = 21
-
 
 class bertEmbedding(nn.Module):
     def __init__(self):
@@ -258,7 +256,7 @@ class bertEmbedding(nn.Module):
         #   pooled_output2 = outputs[1]  
         #   result.append(pooled_output2)
         # output = torch.cat(result,dim=0)
-        encoding = self.tokenizer(x, add_special_tokens = True, return_tensors="pt", padding='max_length', max_length=MAX_LEN, truncation=True).to(device)
+        encoding = self.tokenizer(x, add_special_tokens = True, return_tensors="pt", padding=True, truncation=True).to(device)
         output = self.modelInput(**encoding)
         last_hidden_states = output.last_hidden_state
 
@@ -269,7 +267,7 @@ class ConcatCLS(nn.Module):
     """
     #def __init__(self, sample_rate, window_size, hop_size, mel_bins, fmin, fmax, classes_num, freeze_base):
     def __init__(self, sample_rate, window_size, hop_size, mel_bins,
-                 fmin, fmax, classes_num, freeze_base, text_input_size = 768*MAX_LEN, audio_input_size = 2048, units = 1024):
+                 fmin, fmax, classes_num, freeze_base, text_input_size = 768*21, audio_input_size = 2048, units = 1024):
         super().__init__()
         self.bert_encoder = bertEmbedding()  # bertEmbedding()
         audioset_classes_num = 527
@@ -278,7 +276,7 @@ class ConcatCLS(nn.Module):
                                    fmin, fmax, audioset_classes_num)  # Cnn14()
         self.project_bert = ProjectionLayer(text_input_size, units)
         self.project_audio = ProjectionLayer(audio_input_size, units)
-        self.last = nn.Linear(units,1, bias=False)
+        #self.last = nn.Linear(units,1, bias=False)
         # TODO: tensrodot
 
     def load_from_pretrain(self, pretrained_checkpoint_path):
@@ -293,20 +291,22 @@ class ConcatCLS(nn.Module):
         p_audio = self.project_audio(audio_output['embedding'])  # shape: (batch_size, unit)
         # TODO: c = torch.tensordot(a, b, dims=2).cpu()
         #logits = torch.tensordot(p_bert, p_audio, dims=1)
-        # print('p_bert.shape', p_bert.shape)
-        # print('p_audio', p_audio.shape)
-        logits = p_bert.mul(p_audio)
+        #print('p_bert.shape', p_bert.shape)
+        #print('p_audio', p_audio.shape)
+        #logits = p_bert.mul(p_audio)
 
         # if loss is cross_entropy_with_logits
         # just return logits
         # if loss is cross_entropy_without_logits
-        logits = self.last(logits)
+        #logits = self.last(logits)
         #print("logits_shape",logits.shape)
-        logits = torch.sigmoid(logits)
-
-        # print(logits)
+        #logits = torch.sigmoid(logits)
+        print(p_bert.shape)
+        print(p_audio.shape)
+        print(torch.reshape(torch.cosine_similarity(p_bert, p_audio, dim=1),(32,1)).shape)
+        print(torch.reshape(torch.cosine_similarity(p_bert, p_audio, dim=1),(32,1)))
         
-        return logits
+        return torch.reshape(torch.cosine_similarity(p_bert, p_audio, dim=1),(32,1))
 
 
 
