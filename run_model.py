@@ -137,7 +137,7 @@ def train(args):
         # loss
         output_loss = loss(batch_output_dict, batch_data_dict['target'])
         
-        if iteration % 50 == 0 and iteration > 0:
+        if iteration % 100 == 0 and iteration > 0:
             print('Iteration Number: {} Loss: {}'.format(iteration, float(output_loss)))
 
         # Backward
@@ -145,7 +145,7 @@ def train(args):
         optimizer.step()
 
           # Evaluate
-        if iteration % 100 == 0 and iteration > 0:
+        if iteration % 1000 == 0 and iteration > 0:
             if resume_iteration > 0 and iteration == resume_iteration:
                 pass
             else:
