@@ -287,12 +287,12 @@ class ConcatCLS(nn.Module):
         self.project_bert = ProjectionLayer(text_input_size, units)
         self.project_audio = ProjectionLayer(audio_input_size, units)
 
-        # self.last = nn.Linear(units,1, bias=False)
-        # self.sig = nn.Sigmoid()
-
-        self.cos = nn.CosineSimilarity(dim=1, eps=1e-6)
-        self.unfla = UnFlatten()
+        self.last = nn.Linear(units,1, bias=False)
         self.sig = nn.Sigmoid()
+
+        # self.cos = nn.CosineSimilarity(dim=1, eps=1e-6)
+        # self.unfla = UnFlatten()
+        # self.sig = nn.Sigmoid()
 
     def load_from_pretrain(self, pretrained_checkpoint_path):
         checkpoint = torch.load(pretrained_checkpoint_path)
@@ -305,17 +305,16 @@ class ConcatCLS(nn.Module):
         p_audio = self.project_audio(audio_output['embedding'])  # shape: (batch_size, unit)
 
         # product
-        # logits = torch.mul(p_bert, p_audio)
-        # logits = self.last(logits)
-        # logits = self.sig(logits)
-        # return logits
+        logits = torch.mul(p_bert, p_audio)
+        logits = self.last(logits)
+        logits = self.sig(logits)
+        return logits
 
         # cosine similarity
-        cos_sim = self.cos(p_bert, p_audio)
-        unflatten_sim = self.unfla(cos_sim)
-        sig_cos = self.sig(unflatten_sim)
-        return sig_cos
-
+        # cos_sim = self.cos(p_bert, p_audio)
+        # unflatten_sim = self.unfla(cos_sim)
+        # sig_cos = self.sig(unflatten_sim)
+        # return sig_cos
 
 
 

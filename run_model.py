@@ -17,9 +17,6 @@ from model.models import ConcatCLS
 from model.losses import get_loss_func
 from model.evaluate import Eva
 
-## Load pretrained model/tokenizer
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertModel.from_pretrained('bert-base-uncased',output_hidden_states=True)
 
 def train(args):
 
