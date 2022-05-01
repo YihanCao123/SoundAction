@@ -26,7 +26,7 @@ def forward(model, generator, return_input=False, return_target=False):
 
         with torch.no_grad():
             model.eval()
-            batch_output = model(batch_waveform, [element.decode("utf-8") for element in batch_data_dict['caption']])
+            batch_output = model(batch_waveform, [element for element in batch_data_dict['caption']])
         
         append_to_dict(output_dict, 'audio_name', batch_data_dict['audio_name'])
 
