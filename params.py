@@ -22,7 +22,7 @@ FOLD_DICT, LABELS = parse_labels('/content/ESC-50-master/meta/esc50.csv')
 
 class hdf5_config:
     """HDF5 configs used in data_loader.py. """
-    sample_rate = 32000
+    sample_rate = 41400
     clip_samples = sample_rate * 5
     classes_num = len(LABELS)
     lb_to_idx = {lb: idx for idx, lb in enumerate(LABELS)}
@@ -32,7 +32,7 @@ class hdf5_config:
 
 class train_config:
     """Training configs used in run_model.py. """
-    sample_rate = 32000
+    sample_rate = 41400
     window_size = 1024
     hop_size = 320
     mel_bins = 64
