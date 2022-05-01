@@ -39,16 +39,14 @@ class AudioDataset:
 
         with h5py.File(hdf5_path, 'r') as hf:
             audio_name = hf['audio_name'][index_in_hdf5].decode()
+            audio_path = hf['audio_path'][index_in_hdf5].decode()
             waveform = _convert_int16_to_float32(hf['waveform'][index_in_hdf5])
             target = hf['target'][index_in_hdf5].astype(np.float32)
-            fold_num = hf['fold'][index_in_hdf5].astype(np.float32)
-            caption = hf['caption'][index_in_hdf5].astype(np.string_)
-            # print('data_loader*************************')
-            # print(audio_name, target)
-            # print((waveform == 0).sum()/len(waveform), (waveform == 0).sum(), len(waveform))
+            fold = hf['fold'][index_in_hdf5].astype(np.float32)
+            caption = hf['caption'][index_in_hdf5].decode()
 
         data_dict = {
-            'audio_name': audio_name, 'waveform': waveform, 'target': target, 'fold_num': fold_num, 'caption': caption
+            'audio_name': audio_name, 'audio_path': audio_path, 'waveform': waveform, 'target': target, 'fold': fold, 'caption': caption
         }
 
         return data_dict
@@ -72,10 +70,11 @@ class Base:
 
         with h5py.File(indexes_hdf5_path, 'r') as hf:
             self.audio_names = [audio_name.decode() for audio_name in hf['audio_name'][:]]
+            self.audio_path = [audio_path.decode() for audio_path in hf['audio_path'][:]]
             self.indexes_in_hdf5 = hf['index_in_hdf5'][:]
             self.targets = hf['target'][:].astype(np.float32)
-            self.folds = hf['fold'][:].astype(np.float32)
-            self.caption = hf['caption'][:].astype(np.string_)
+            self.folds = hf['fold'][:].astype(np.int16)
+            self.caption = [cap.decode() for cap in hf['caption'][:]]
 
         (self.audios_num, self.classes_num) = self.targets.shape
 
@@ -101,7 +100,6 @@ class TrainSampler:
 
         # Shuffle indexes
         self.random_state.shuffle(self.indexes)
-
         self.pointer = 0
 
     def __iter__(self):
@@ -191,6 +189,7 @@ class EvaluateSampler:
 
 class TrainEvaluateSampler:
     def __init__(self, hdf5_path, holdout_fold, batch_size, random_seed=1234):
+        self.random_state = np.random.RandomState(random_seed)
         self.hdf5_path = hdf5_path
         self.batch_size = batch_size
 
@@ -199,6 +198,9 @@ class TrainEvaluateSampler:
 
         self.indexes = np.where(self.folds != int(holdout_fold))[0]
         self.audios_num = len(self.indexes)
+
+        # Shuffle indexes
+        self.random_state.shuffle(self.indexes)
 
     def __iter__(self):
         """Generate batch meta for training. """

@@ -42,7 +42,7 @@ def parse_caption(filepath):
 
 #['airplane', 'breathing','cat','car_horn']
 
-NUM_NEG = 2
+NUM_NEG = 3
 
 FOLD_DICT, LABELS = [], [1]
 CAPTION_DICT = generate_negative(parse_caption('/content/clotho_captions_development.csv'), NUM_NEG)

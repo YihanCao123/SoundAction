@@ -69,17 +69,33 @@ def pack_audio_files_to_hdf5(args):
 
     audio_names, audio_paths = traverse_folder(audios_dir)
 
+
     assert len(audio_names) == len(audio_paths), 'Different Length for audio name and path'
 
     repeated_audio_name =  np.repeat(np.array(audio_names), 5 + num_negative)
     repeated_audio_path = np.repeat(np.array(audio_paths), 5 + num_negative)
     target_neg = np.array([([1, 1, 1, 1, 1] + [0] * num_negative) for i in range(len(audio_paths))]).reshape(-1)
     fold_np = np.random.permutation(len(target_neg)) % 5
-    caption_np = (np.array([caption_dict[audio_name] for audio_name in audio_names])).reshape(-1)
+    caption_np = np.array([caption_dict[audio_name] for audio_name in audio_names]).reshape(-1)
 
     assert len(target_neg) == len(repeated_audio_path), 'Different Length for target and path'
     assert len(target_neg) == len(repeated_audio_name), 'Different Length for audio name and target'
     assert len(target_neg) == len(caption_np), 'Different Length for audio caption and target'
+    assert len(target_neg) == len(fold_np), 'Different Length for fold and target'
+    audios_num = len(repeated_audio_name)
+
+    print('Validating...')
+    for i in range(audios_num):
+        caption_lst = caption_dict[repeated_audio_name[i]]
+        if caption_np[i] not in caption_lst:
+            print('Wrong caption for idx {}'.format(i+1))
+        if caption_np[i] not in caption_lst[:5] and target_neg[i] != 0:
+            print('Wrong negative target for idx {}'.format(i+1))
+        if caption_np[i] in caption_lst[:5] and target_neg[i] == 0:
+            print('Wrong positive target for idx {}'.format(i+1))
+        if caption_np[i] not in caption_lst:
+            print('Wrong caption for idx {}'.format(i+1))
+
 
     meta_dict = {
         'audio_name': repeated_audio_name,
@@ -89,7 +105,7 @@ def pack_audio_files_to_hdf5(args):
         'caption': caption_np,
     }
 
-    audios_num = len(repeated_audio_name)
+
 
     feature_time = time.time()
 
@@ -97,7 +113,13 @@ def pack_audio_files_to_hdf5(args):
         hf.create_dataset(
             name='audio_name',
             shape=(audios_num,),
-            dtype='S80'
+            dtype='S200'
+        )
+
+        hf.create_dataset(
+            name='audio_path',
+            shape=(audios_num,),
+            dtype='S200'
         )
 
         hf.create_dataset(
@@ -121,20 +143,22 @@ def pack_audio_files_to_hdf5(args):
         hf.create_dataset(
             name='caption',
             shape=(audios_num,),
-            dtype='S80'
+            dtype='S200'
         )
 
         energy = 5 + num_negative
         storage = energy
         for n in range(audios_num):
+            # print("{} / {} Engergy: {}".format(n+1, audios_num, energy))
+            
 
             audio_name = meta_dict['audio_name'][n]
-            fold = meta_dict['fold'][n]
             audio_path = meta_dict['audio_path'][n]
+            if '.wav' not in audio_name:
+                print('******{}/{} name: {}, caption: {}'.format(n+1, audios_num, audio_name, meta_dict['caption'][n]))
 
-            print('{}/{} name: {}, caption: {}'.format(n+1, audios_num, audio_name, meta_dict['caption'][n]))
-
-            if energy == storage:
+            if energy == -1:
+                print('Read wav')
                 (audio, fs) = librosa.core.load(audio_path, sr=sample_rate, mono=True)
                 audio = pad_truncate_sequence(audio, clip_samples)
                 int16_audio = _convert_float32_to_int16(audio)
@@ -144,10 +168,16 @@ def pack_audio_files_to_hdf5(args):
                 energy = storage
 
             hf['audio_name'][n] = audio_name.encode()
+            hf['audio_path'][n] = audio_path.encode()
             hf['waveform'][n] = int16_audio
             hf['target'][n] = meta_dict['target'][n] #to_one_hot(meta_dict['target'][n], classes_num)
             hf['fold'][n] = meta_dict['fold'][n]
             hf['caption'][n] = meta_dict['caption'][n].encode()
+            if hf['audio_path'][n].decode() != meta_dict['audio_path'][n]:
+                print('Path******{} caption: {}, caption: {}'.format(n+1, len(hf['audio_path'][n].decode()), len(meta_dict['audio_path'][n])))
+            if hf['caption'][n].decode() != meta_dict['caption'][n]:
+                print('Caption******{} caption: {}, caption: {}'.format(n+1, len(hf['caption'][n].decode()), len(meta_dict['caption'][n])))
+
 
     print("Write hdf5 to {}".format(packed_hdf5_path))
     print("Time {:.3f} s".format(time.time() - feature_time))
