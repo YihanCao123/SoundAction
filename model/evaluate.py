@@ -51,7 +51,6 @@ class Eva:
         numpy_decrible(output)
         print('Target summary:')
         numpy_decrible(target)
-        print('Total number of 1: ', (target == 1).sum()/len(target))
 
 
         #  np.mean((target - (output > 0)) == 0)
