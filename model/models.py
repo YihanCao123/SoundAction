@@ -172,7 +172,7 @@ class Transfer_Cnn14(nn.Module):
             fmax, audioset_classes_num)
         
         # Transfer
-        self.fc_transfer = nn.Linear(2048, classes_num, bias=True)
+        self.fc_transfer = nn.Linear(2048 + 20, classes_num, bias=True)
 
         if freeze_base:
             # Freeze AudioSet pretrained layers
@@ -188,17 +188,20 @@ class Transfer_Cnn14(nn.Module):
         checkpoint = torch.load(pretrained_checkpoint_path)
         self.base.load_state_dict(checkpoint['model'])
 
-    def forward(self, input, mixup_lambda=None):
+    def forward(self, inp, av_input, mixup_lambda=None):
         """Input: (batch_size, data_length)
         """
-        output_dict = self.base(input)
+        output_dict = self.base(inp)
         embedding = output_dict['embedding']
         action_vector = output_dict['clipwise_output']
 
         # TODO: concat the input with the action vector. But here for easy implementation,
         # we ignore this step.
 
-        output = torch.log_softmax(self.fc_transfer(embedding), dim=-1)
+        # (32, 20)
+        cat_embedding_av = torch.cat((embedding, av_input), 1)
+
+        output = torch.log_softmax(self.fc_transfer(cat_embedding_av), dim=-1)
 
         outputs = {}
         outputs['embedding'] = embedding

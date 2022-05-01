@@ -3,6 +3,22 @@
 """
 
 import csv
+import pandas as pd
+import numpy as np
+
+
+def read_action_vectors(av_filename):
+    av_training_data = pd.read_csv(av_filename)
+
+    action_vectors = av_training_data.drop(columns=['fold', 'target', 'category'])
+    file_name_av_lst = action_vectors.values.tolist()
+    action_vector_dict = {}
+    for f_av in file_name_av_lst:
+        action_vector_dict[f_av[0]] = np.asarray(f_av[1:], dtype='int16')
+    return action_vector_dict
+
+AV_DICT = read_action_vectors('/content/SoundAction/actionvector_one_per_audiofile_sum.csv')
+
 
 def parse_labels(filepath):
     subset = set()
@@ -28,6 +44,8 @@ class hdf5_config:
     lb_to_idx = {lb: idx for idx, lb in enumerate(LABELS)}
     idx_to_lb = {idx: lb for idx, lb in enumerate(LABELS)}
     fold_dict = FOLD_DICT
+    av_dict = AV_DICT
+    av_length = 20
 
 
 class train_config:

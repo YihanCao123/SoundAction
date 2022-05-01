@@ -21,15 +21,13 @@ def append_to_dict(dct, key, val):
 def forward(model, generator, return_input=False, return_target=False):
     output_dict = {}
     device = next(model.parameters()).device
-    i = 0
     for batch_data_dict in generator:
-        print(i)
-        i += 1
         batch_waveform = move_data_to_device(batch_data_dict['waveform'], device)
+        batch_action_vector = move_data_to_device(batch_data_dict['action_vector'], device)
 
         with torch.no_grad():
             model.eval()
-            batch_output = model(batch_waveform)
+            batch_output = model(batch_waveform, batch_action_vector)
         
         append_to_dict(output_dict, 'audio_name', batch_data_dict['audio_name'])
 

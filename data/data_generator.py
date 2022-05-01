@@ -60,6 +60,8 @@ def pack_audio_files_to_hdf5(args):
     classes_num = config.classes_num
     lb_to_idx = config.lb_to_idx
     fold_dict = config.fold_dict
+    av_dict = config.av_dict
+    av_length = config.av_length
 
     # Paths
     audios_dir = os.path.join(dataset_dir)
@@ -68,6 +70,12 @@ def pack_audio_files_to_hdf5(args):
     create_folder(os.path.dirname(packed_hdf5_path))
 
     audio_names, audio_paths = traverse_folder(audios_dir)
+
+    for an in audio_names:
+        if an in av_dict.keys():
+            pass
+        else:
+            print('{} is not in the av dict!'.format(an))
 
 
     # validation
@@ -81,6 +89,7 @@ def pack_audio_files_to_hdf5(args):
         'audio_path': np.array(audio_paths),
         'target': np.array([lb_to_idx[audio_path.split('/')[3]] for audio_path in audio_paths]),
         'fold': np.array([fold_dict[audio_name] for audio_name in audio_names]),
+        'action_vector': np.array([av_dict[name] for name in audio_names]),
     }
     print(np.array([fold_dict[audio_name] for audio_name in audio_names]))
 
@@ -112,6 +121,12 @@ def pack_audio_files_to_hdf5(args):
             shape=(audios_num,),
             dtype=np.int32
         )
+        
+        hf.create_dataset(
+            name='action_vector',
+            shape=(audios_num, av_length),
+            dtype=np.float32
+        )
 
         for n in range(audios_num):
             audio_name = meta_dict['audio_name'][n]
@@ -125,6 +140,7 @@ def pack_audio_files_to_hdf5(args):
             hf['waveform'][n] = _convert_float32_to_int16(audio)
             hf['target'][n] = to_one_hot(meta_dict['target'][n], classes_num)
             hf['fold'][n] = meta_dict['fold'][n]
+            hf['action_vector'][n] = meta_dict['action_vector'][n]
 
     print("Write hdf5 to {}".format(packed_hdf5_path))
     print("Time {:.3f} s".format(time.time() - feature_time))

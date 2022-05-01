@@ -132,24 +132,7 @@ def train(args):
 
                 train_time = train_fin_time - train_begin_time
                 validate_time = time.time() - train_fin_time
-
-                '''
-                logging.info(
-                    "Train time: {:.3f} s, validate time: {:.3f} s".format(train_time, validate_time)
-                )'''
-
                 train_begin_time = time.time()
-        # Save
-        '''
-        if iteration % 2000 == 0 or iteration > 0:
-            checkpoint = {
-                'iteration': iteration,
-                'model': model.module.state_dict()
-            }
-
-            checkpoint_path = os.path.join(checkpoints_dir, '{}_iterations.pth'.format(iteration))
-            torch.save(checkpoint, checkpoint_path)
-            print('Model saved to {}'.format(checkpoint_path))'''
             
         # Move data to GPU
         for key in batch_data_dict.keys():
@@ -158,7 +141,7 @@ def train(args):
         # Train
         model.train()
 
-        batch_output_dict = model(batch_data_dict['waveform'], None)
+        batch_output_dict = model(batch_data_dict['waveform'], batch_data_dict['action_vector'], None)
         
         batch_targets_dict = {'target': batch_data_dict['target']}
 
