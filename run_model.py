@@ -130,7 +130,7 @@ def train(args):
         optimizer.zero_grad()
         # Train
         # batch_output_dict = model(batch_data_dict['waveform'], [tokenizer.convert_tokens_to_ids(tokenizer.tokenize("[CLS] " + element.decode("utf-8") + " [SEP]")) for element in batch_data_dict['caption']])
-        batch_output_dict = model(batch_data_dict['waveform'], batch_data_dict['caption'])
+        batch_output_dict = model(batch_data_dict['waveform'], [element for element in batch_data_dict['caption']])
 
         # for idx in range(len(batch_output_dict)):
         #     print(batch_output_dict[idx], batch_data_dict['target'][idx])
