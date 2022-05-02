@@ -40,7 +40,7 @@ def train(args):
     loss_func = get_loss_func(loss_type)
     pretrain = True if pretrained_checkpoint_path else False
 
-    print('Action Vector: {}, Model: {}'.format(shutdown_av, model_type))
+    print('Action Vector: {}, Model: {}'.format(not shutdown_av, model_type))
 
     hdf5_path = os.path.join(workspace, 'features', 'waveform.h5')
 
