@@ -151,7 +151,7 @@ def train(args):
         # loss
         loss = loss_func(batch_output_dict, batch_targets_dict)
         if iteration % 100 == 0 and iteration > 0:
-            print('Iteration: {}, Loss: {}'.format(iteration, loss.item))
+            print('Iteration: {}, Loss: {}'.format(iteration, loss.item()))
 
         # Backward
         optimizer.zero_grad()
