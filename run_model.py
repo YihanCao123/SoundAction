@@ -13,9 +13,10 @@ from model.utils import move_data_to_device
 from params import train_config
 from data.utils import create_folder, create_logging, get_filename
 from data.data_loader import AudioDataset, TrainSampler, EvaluateSampler, collate_fn
-from model.models import Transfer_Cnn14
+from model.models import ConcatCLS
 from model.losses import get_loss_func
 from model.evaluate import Eva
+
 
 def train(args):
 
@@ -56,7 +57,7 @@ def train(args):
     #logging.info(args)
 
     # Model
-    Model = eval(model_type) # This could be Model = Transfer_Cnn14() in our case, however, here for easy implementation, we will still use this.
+    Model = ConcatCLS # This could be Model = Transfer_Cnn14() in our case, however, here for easy implementation, we will still use this.
 
     model = Model(train_config.sample_rate, train_config.window_size, train_config.hop_size, train_config.mel_bins,
     train_config.fmin, train_config.fmax, train_config.classes_num, train_config.freeze_base)
@@ -114,12 +115,37 @@ def train(args):
     evaluator = Eva(model=model)
 
     train_begin_time = time.time()
+    
+    loss = nn.BCELoss()
+    
+    model.train()
 
     # Train
     print('Start Training')
     for batch_data_dict in train_loader:
-        # Evaluate
+                # Move data to GPU
+        for key in batch_data_dict.keys():
+            batch_data_dict[key] = move_data_to_device(batch_data_dict[key], device)
+
+        optimizer.zero_grad()
+        # Train
+        # batch_output_dict = model(batch_data_dict['waveform'], [tokenizer.convert_tokens_to_ids(tokenizer.tokenize("[CLS] " + element.decode("utf-8") + " [SEP]")) for element in batch_data_dict['caption']])
+        batch_output_dict = model(batch_data_dict['waveform'], [element for element in batch_data_dict['caption']])
+
+        # for idx in range(len(batch_output_dict)):
+        #     print(batch_output_dict[idx], batch_data_dict['target'][idx])
+        # loss
+        output_loss = loss(batch_output_dict, batch_data_dict['target'])
+        
         if iteration % 100 == 0 and iteration > 0:
+            print('Iteration Number: {} Loss: {}'.format(iteration, float(output_loss)))
+
+        # Backward
+        output_loss.backward()
+        optimizer.step()
+
+          # Evaluate
+        if iteration % 1000 == 0 and iteration > 0:
             if resume_iteration > 0 and iteration == resume_iteration:
                 pass
             else:
@@ -133,44 +159,9 @@ def train(args):
                 train_time = train_fin_time - train_begin_time
                 validate_time = time.time() - train_fin_time
 
-                '''
-                logging.info(
-                    "Train time: {:.3f} s, validate time: {:.3f} s".format(train_time, validate_time)
-                )'''
+
 
                 train_begin_time = time.time()
-        # Save
-        '''
-        if iteration % 2000 == 0 or iteration > 0:
-            checkpoint = {
-                'iteration': iteration,
-                'model': model.module.state_dict()
-            }
-
-            checkpoint_path = os.path.join(checkpoints_dir, '{}_iterations.pth'.format(iteration))
-            torch.save(checkpoint, checkpoint_path)
-            print('Model saved to {}'.format(checkpoint_path))'''
-            
-        # Move data to GPU
-        for key in batch_data_dict.keys():
-            batch_data_dict[key] = move_data_to_device(batch_data_dict[key], device)
-
-        # Train
-        model.train()
-
-        batch_output_dict = model(batch_data_dict['waveform'], None)
-        
-        batch_targets_dict = {'target': batch_data_dict['target']}
-
-        # loss
-        loss = loss_func(batch_output_dict, batch_targets_dict)
-        if iteration % 100 == 0 and iteration > 0:
-            print(iteration, loss)
-
-        # Backward
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
 
         # Stop
         if iteration == stop_iteration:

@@ -69,12 +69,6 @@ def pack_audio_files_to_hdf5(args):
 
     audio_names, audio_paths = traverse_folder(audios_dir)
 
-
-    # validation
-    # label_dict = parse_label_dict('/content/ESC-50-master/meta/esc50.csv', ['airplane', 'breathing','cat','car_horn'])
-    #for i in range(len(audio_names)):
-      #print(audio_names[i], audio_paths[i].split('/')[3], lb_to_idx[audio_paths[i].split('/')[3]], label_dict[audio_names[i]] == audio_paths[i].split('/')[3])
-
     print(audio_names)
     meta_dict = {
         'audio_name': np.array(audio_names),

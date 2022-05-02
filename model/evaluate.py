@@ -14,6 +14,23 @@ def calculate_acc(y_true, y_pred):
     acc = np.sum(np.argmax(y_true, axis=-1) == np.argmax(y_pred, axis=-1)) / N
     return acc
 
+def numpy_decrible(arr):
+    # measures of dispersion
+    min_ = np.amin(arr)
+    max_ = np.amax(arr)
+    range_ = np.ptp(arr)
+    variance = np.var(arr)
+    sd = np.std(arr)
+    mean_ = np.mean(arr)
+    
+    print("Array =", arr)
+    print("Measures of Dispersion")
+    print("Minimum =", min_)
+    print("Maximum =", max_)
+    print("Range =", range_)
+    print("Variance =", variance)
+    print("Standard Deviation =", sd)
+    print("Mean =", mean_)
 
 class Eva:
     def __init__(self, model):
@@ -27,12 +44,17 @@ class Eva:
             return_target=True
         )
 
-        clipwise_output = output_dict['clipwise_output']
+        output = output_dict['predict_target']
         target = output_dict['target']
 
-        cm = metrics.confusion_matrix(np.argmax(target, axis=-1), np.argmax(clipwise_output, axis=-1), labels=None)
-        acc = calculate_acc(target, clipwise_output)
+        print('Tutput summary:')
+        numpy_decrible(output)
+        print('Target summary:')
+        numpy_decrible(target)
 
-        statistics = {'accuracy': acc, 'confusion_matrix': cm}
+
+        #  np.mean((target - (output > 0)) == 0)
+        
+        statistics = {'accuracy': np.mean(np.abs(output - target) < 0.25), 'confusion_matrix': None}
 
         return statistics

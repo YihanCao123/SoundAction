@@ -13,9 +13,9 @@ from model.utils import move_data_to_device
 from params import train_config
 from data.utils import create_folder, create_logging, get_filename
 from data.data_loader import AudioDataset, TrainSampler, EvaluateSampler, collate_fn
-from model.models import Transfer_Cnn14
-from model.losses import get_loss_func
-from model.evaluate import Eva
+#from model.models import Transfer_Cnn14
+#from model.losses import get_loss_func
+#from model.evaluate import Eva
 
 def train(args):
 
@@ -35,7 +35,7 @@ def train(args):
     device = 'cuda' if (args.cuda and torch.cuda.is_available()) else 'cpu'
     filename = args.filename
     num_workers = 1
-    loss_func = get_loss_func(loss_type)
+    #loss_func = get_loss_func(loss_type)
     pretrain = True if pretrained_checkpoint_path else False
 
     hdf5_path = os.path.join(workspace, 'features', 'waveform.h5')
@@ -47,22 +47,22 @@ def train(args):
     )
     create_folder(checkpoints_dir)
 
-    Model = eval(model_type) # This could be Model = Transfer_Cnn14() in our case, however, here for easy implementation, we will still use this.
-    model = Model(train_config.sample_rate, train_config.window_size, train_config.hop_size, train_config.mel_bins,
-    train_config.fmin, train_config.fmax, train_config.classes_num, train_config.freeze_base)
+    # Model = eval(model_type) # This could be Model = Transfer_Cnn14() in our case, however, here for easy implementation, we will still use this.
+    # model = Model(train_config.sample_rate, train_config.window_size, train_config.hop_size, train_config.mel_bins,
+    # train_config.fmin, train_config.fmax, train_config.classes_num, train_config.freeze_base)
 
-    if pretrain:
-        print("Load pretrained model from {}".format(pretrained_checkpoint_path))
-        model.load_from_pretrain(pretrained_checkpoint_path)
+    # if pretrain:
+    #     print("Load pretrained model from {}".format(pretrained_checkpoint_path))
+    #     #model.load_from_pretrain(pretrained_checkpoint_path)
 
-    if resume_iteration:
-        resume_checkpoint_path = os.path.join(checkpoints_dir, '{}_iterations.pth'.format(resume_iteration))
-        print("Load resume model from {}".format(resume_checkpoint_path))
-        resume_checkpoint = torch.load(resume_checkpoint_path)
-        model.load_state_dict(resume_checkpoint['model'])
-        iteration = resume_checkpoint['iteration']
-    else:
-        iteration = 0
+    # if resume_iteration:
+    #     resume_checkpoint_path = os.path.join(checkpoints_dir, '{}_iterations.pth'.format(resume_iteration))
+    #     print("Load resume model from {}".format(resume_checkpoint_path))
+    #     resume_checkpoint = torch.load(resume_checkpoint_path)
+    #     model.load_state_dict(resume_checkpoint['model'])
+    #     iteration = resume_checkpoint['iteration']
+    # else:
+    #     iteration = 0
 
     # Data
     dataset = AudioDataset()
@@ -89,8 +89,7 @@ def train(args):
         num_workers=num_workers, pin_memory=True
     )
 
-    for x in train_loader:
-        return
+
     print('line100')
 
     validate_loader = torch.utils.data.DataLoader(dataset=dataset,
@@ -98,82 +97,95 @@ def train(args):
         num_workers=num_workers, pin_memory=True
     )
 
-    if 'cuda' in device:
-        model.to(device)
+    # if 'cuda' in device:
+    #     model.to(device)
 
-    # Optimizer
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999),
-        eps=1e-08, weight_decay=0., amsgrad=True
-    )
+    # # Optimizer
+    # optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas=(0.9, 0.999),
+    #     eps=1e-08, weight_decay=0., amsgrad=True
+    # )
 
-    # Evaluator
-    evaluator = Eva(model=model)
+    # # Evaluator
+    # evaluator = Eva(model=model)
 
-    train_begin_time = time.time()
-    print(train_begin_time)
+    # train_begin_time = time.time()
+    # print(train_begin_time)
 
     # Train
-    print('Start Training')
+    print('Start Test')
     for batch_data_dict in train_loader:
-        # Evaluate
-        if iteration % 100 == 0 and iteration > 0:
-            if resume_iteration > 0 and iteration == resume_iteration:
-                pass
-            else:
-                print("-----------------------------------------------")
-                print("Iteration: {}".format(iteration))
-
-                train_fin_time = time.time()
-                statistics =  evaluator.evaluate(validate_loader)
-                print("Validate accuracy: {:.3f}".format(statistics['accuracy']))
-
-                train_time = train_fin_time - train_begin_time
-                validate_time = time.time() - train_fin_time
-
-                '''
-                logging.info(
-                    "Train time: {:.3f} s, validate time: {:.3f} s".format(train_time, validate_time)
-                )'''
-
-                train_begin_time = time.time()
-        # Save
-        '''
-        if iteration % 2000 == 0 or iteration > 0:
-            checkpoint = {
-                'iteration': iteration,
-                'model': model.module.state_dict()
-            }
-
-            checkpoint_path = os.path.join(checkpoints_dir, '{}_iterations.pth'.format(iteration))
-            torch.save(checkpoint, checkpoint_path)
-            print('Model saved to {}'.format(checkpoint_path))'''
-            
-        # Move data to GPU
+        
         for key in batch_data_dict.keys():
             batch_data_dict[key] = move_data_to_device(batch_data_dict[key], device)
 
-        # Train
-        model.train()
-
-        batch_output_dict = model(batch_data_dict['waveform'], None)
+        #print(batch_data_dict['waveform'])
         
-        batch_targets_dict = {'target': batch_data_dict['target']}
+        print(np.array([element.decode("utf-8") for element in batch_data_dict['caption']]))
+        
 
-        # loss
-        loss = loss_func(batch_output_dict, batch_targets_dict)
-        if iteration % 100 == 0 and iteration > 0:
-            print(iteration, loss)
+        #print(batch_data_dict['fold_num'])
 
-        # Backward
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
+    # for batch_data_dict in train_loader:
+        
+    #     # Evaluate
+    #     if iteration % 100 == 0 and iteration > 0:
+    #         if resume_iteration > 0 and iteration == resume_iteration:
+    #             pass
+    #         else:
+    #             print("-----------------------------------------------")
+    #             print("Iteration: {}".format(iteration))
 
-        # Stop
-        if iteration == stop_iteration:
-            break
+    #             train_fin_time = time.time()
+    #             statistics =  evaluator.evaluate(validate_loader)
+    #             print("Validate accuracy: {:.3f}".format(statistics['accuracy']))
 
-        iteration += 1
+    #             train_time = train_fin_time - train_begin_time
+    #             validate_time = time.time() - train_fin_time
+
+    #             '''
+    #             logging.info(
+    #                 "Train time: {:.3f} s, validate time: {:.3f} s".format(train_time, validate_time)
+    #             )'''
+
+    #             train_begin_time = time.time()
+    #     # Save
+    #     '''
+    #     if iteration % 2000 == 0 or iteration > 0:
+    #         checkpoint = {
+    #             'iteration': iteration,
+    #             'model': model.module.state_dict()
+    #         }
+
+    #         checkpoint_path = os.path.join(checkpoints_dir, '{}_iterations.pth'.format(iteration))
+    #         torch.save(checkpoint, checkpoint_path)
+    #         print('Model saved to {}'.format(checkpoint_path))'''
+            
+    #     # Move data to GPU
+    #     for key in batch_data_dict.keys():
+    #         batch_data_dict[key] = move_data_to_device(batch_data_dict[key], device)
+
+    #     # Train
+    #     model.train()
+
+    #     batch_output_dict = model(batch_data_dict['waveform'], None)
+        
+    #     batch_targets_dict = {'target': batch_data_dict['target']}
+
+    #     # loss
+    #     loss = loss_func(batch_output_dict, batch_targets_dict)
+    #     if iteration % 100 == 0 and iteration > 0:
+    #         print(iteration, loss)
+
+    #     # Backward
+    #     optimizer.zero_grad()
+    #     loss.backward()
+    #     optimizer.step()
+
+    #     # Stop
+    #     if iteration == stop_iteration:
+    #         break
+
+    #     iteration += 1
 
 
 if __name__ == '__main__':
