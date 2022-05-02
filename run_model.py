@@ -39,6 +39,11 @@ def train(args):
     num_workers = 1
     loss_func = get_loss_func(loss_type)
     pretrain = True if pretrained_checkpoint_path else False
+    
+    if shutdown_av == 'False':
+        shutdown_av = False
+    else:
+        shutdown_av = True
 
     print('**************************************************************')
     print('Action Vector: {}, Model: {}, Holdout Fold: {}'.format(not shutdown_av, model_type, holdout_fold))
@@ -174,7 +179,7 @@ if __name__ == '__main__':
     # Train args.shutdown_av --two_tower_path
     parser_train = subparsers.add_parser("train")
     parser_train.add_argument("--two_tower_path", type=str)
-    parser_train.add_argument("--shutdown_av", type=bool, required=True, help='Shutdown av?')
+    parser_train.add_argument("--shutdown_av", type=str, help='Shutdown av?')
     parser_train.add_argument("--dataset_dir", type=str, required=True, help='Directory of dataset. ')
     parser_train.add_argument("--workspace", type=str, required=True, help='Directory of your workspace. ')
     parser_train.add_argument("--holdout_fold", type=str, choices=['1', '2', '3', '4', '5'], required=True)

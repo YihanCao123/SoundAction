@@ -6,6 +6,15 @@ import csv
 import pandas as pd
 import numpy as np
 
+def read_openl3_dict(openl3_file):
+    data = np.load(openl3_file, allow_pickle=True)
+    OPENL3_DICT = dict()
+    # item.shape (46, 6144)
+    for line in data:
+        OPENL3_DICT[line[0]] = line[1]
+    return OPENL3_DICT, data[0][1].shape
+
+OPENL3_DICT, OPENL3_SHAPE = read_openl3_dict('/content/ESC-50_openl3_music_mel256_6144.npy')
 
 def read_action_vectors(av_filename):
     av_training_data = pd.read_csv(av_filename)
@@ -46,6 +55,8 @@ class hdf5_config:
     fold_dict = FOLD_DICT
     av_dict = AV_DICT
     av_length = 20
+    openl3_dict = OPENL3_DICT
+    openl3_shape = OPENL3_SHAPE
 
 
 class train_config:
