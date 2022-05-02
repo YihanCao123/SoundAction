@@ -162,7 +162,7 @@ class Cnn14(nn.Module):
 
 class Transfer_Cnn14(nn.Module):
     def __init__(self, sample_rate, window_size, hop_size, mel_bins, 
-        fmin, fmax, classes_num, freeze_base):
+        fmin, fmax, classes_num, freeze_base, shutdowm_av = False):
         """Classifier to a new task. Our model actually begins here. """
         super(Transfer_Cnn14, self).__init__()
         # TODO: the class num here is the classnum for CNN14.
@@ -170,9 +170,13 @@ class Transfer_Cnn14(nn.Module):
 
         self.base = Cnn14(sample_rate, window_size, hop_size, mel_bins, fmin,
             fmax, audioset_classes_num)
+        self.shutdowm_av = False
         
         # Transfer
-        self.fc_transfer = nn.Linear(2048 + 20, classes_num, bias=True)
+        if self.shutdowm_av:
+            self.fc_transfer = nn.Linear(2048, classes_num, bias=True)        
+        else:
+            self.fc_transfer = nn.Linear(2048 + 20, classes_num, bias=True)
 
         if freeze_base:
             # Freeze AudioSet pretrained layers
@@ -184,11 +188,18 @@ class Transfer_Cnn14(nn.Module):
     def init_weight(self):
         init_layer(self.fc_transfer)
     
-    def load_from_pretrain(self, pretrained_checkpoint_path):
-        checkpoint = torch.load(pretrained_checkpoint_path)
-        self.base.load_state_dict(checkpoint['model'])
+    def load_from_pretrain(self, pretrained_checkpoint_path, two_tower_path, model_type):
+        if model_type == 'Transfer_Cnn14':
+            print("Load pretrained model from {}".format(pretrained_checkpoint_path))
+            checkpoint = torch.load(pretrained_checkpoint_path)
+            self.base.load_state_dict(checkpoint['model'])
+        
+        if model_type == 'Two_tower':
+            print("Load two tower model from {}".format(two_tower_path))
+            checkpoint = torch.load(two_tower_path)
+            self.base.load_state_dict(checkpoint['two_tower_state_dict'])
 
-    def forward(self, inp, av_input, mixup_lambda=None):
+    def forward(self, inp, av_input,  mixup_lambda=None):
         """Input: (batch_size, data_length)
         """
         output_dict = self.base(inp)
@@ -199,7 +210,10 @@ class Transfer_Cnn14(nn.Module):
         # we ignore this step.
 
         # (32, 20)
-        cat_embedding_av = torch.cat((embedding, av_input), 1)
+        if not self.shutdowm_av:
+            cat_embedding_av = torch.cat((embedding, av_input), 1)
+        else:
+            cat_embedding_av = embedding
 
         output = torch.log_softmax(self.fc_transfer(cat_embedding_av), dim=-1)
 

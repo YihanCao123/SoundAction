@@ -20,11 +20,13 @@ from model.evaluate import Eva
 def train(args):
 
     # Parameters
+    shutdown_av = args.shutdown_av
     dataset_dir = args.dataset_dir
     workspace = args.workspace
     holdout_fold = args.holdout_fold
     model_type = args.model_type
     pretrained_checkpoint_path = args.pretrained_checkpoint_path
+    two_tower_path = args.two_tower_path
     freeze_base = args.freeze_base
     loss_type = args.loss_type
     augmentation = args.augmentation
@@ -37,6 +39,8 @@ def train(args):
     num_workers = 1
     loss_func = get_loss_func(loss_type)
     pretrain = True if pretrained_checkpoint_path else False
+
+    print('Action Vector: {}, Model: {}'.format(shutdown_av, model_type))
 
     hdf5_path = os.path.join(workspace, 'features', 'waveform.h5')
 
@@ -56,14 +60,13 @@ def train(args):
     #logging.info(args)
 
     # Model
-    Model = eval(model_type) # This could be Model = Transfer_Cnn14() in our case, however, here for easy implementation, we will still use this.
+    Model = Transfer_Cnn14 # This could be Model = Transfer_Cnn14() in our case, however, here for easy implementation, we will still use this.
 
     model = Model(train_config.sample_rate, train_config.window_size, train_config.hop_size, train_config.mel_bins,
-    train_config.fmin, train_config.fmax, train_config.classes_num, train_config.freeze_base)
+    train_config.fmin, train_config.fmax, train_config.classes_num, train_config.freeze_base, shutdown_av)
 
     if pretrain:
-        print("Load pretrained model from {}".format(pretrained_checkpoint_path))
-        model.load_from_pretrain(pretrained_checkpoint_path)
+        model.load_from_pretrain(pretrained_checkpoint_path, two_tower_path, model_type)
 
     if resume_iteration:
         resume_checkpoint_path = os.path.join(checkpoints_dir, '{}_iterations.pth'.format(resume_iteration))
@@ -166,8 +169,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="")
     subparsers = parser.add_subparsers(dest='mode')
 
-    # Train
+    # Train args.shutdown_av --two_tower_path
     parser_train = subparsers.add_parser("train")
+    parser_train.add_argument("--two_tower_path", type=str)
+    parser_train.add_argument("--shutdown_av", type=bool, required=True, help='Shutdown av?')
     parser_train.add_argument("--dataset_dir", type=str, required=True, help='Directory of dataset. ')
     parser_train.add_argument("--workspace", type=str, required=True, help='Directory of your workspace. ')
     parser_train.add_argument("--holdout_fold", type=str, choices=['1', '2', '3', '4', '5'], required=True)
