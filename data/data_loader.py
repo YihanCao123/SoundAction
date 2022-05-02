@@ -43,10 +43,11 @@ class AudioDataset:
             target = hf['target'][index_in_hdf5].astype(np.float32)
             fold_num =  hf['fold'][index_in_hdf5]
             action_vector =  hf['action_vector'][index_in_hdf5].astype(np.float32)
+            openl3_embedding = hf['openl3_embedding'][index_in_hdf5].astype(np.float32)
 
         data_dict = {
             'audio_name': audio_name, 'waveform': waveform, 'target': target, 
-            'fold_num': fold_num, 'action_vector': action_vector
+            'fold_num': fold_num, 'action_vector': action_vector, 'openl3_embedding': openl3_embedding
         }
 
         return data_dict

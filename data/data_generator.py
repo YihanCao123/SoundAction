@@ -62,6 +62,8 @@ def pack_audio_files_to_hdf5(args):
     fold_dict = config.fold_dict
     av_dict = config.av_dict
     av_length = config.av_length
+    openl3_dict = config.openl3_dict
+    openl3_shape = config.openl3_shape
 
     # Paths
     audios_dir = os.path.join(dataset_dir)
@@ -90,6 +92,7 @@ def pack_audio_files_to_hdf5(args):
         'target': np.array([lb_to_idx[audio_path.split('/')[3]] for audio_path in audio_paths]),
         'fold': np.array([fold_dict[audio_name] for audio_name in audio_names]),
         'action_vector': np.array([av_dict[name] for name in audio_names]),
+        'openl3_embedding': np.array([openl3_dict[name] for name in audio_names]),
     }
     print(np.array([fold_dict[audio_name] for audio_name in audio_names]))
 
@@ -128,6 +131,12 @@ def pack_audio_files_to_hdf5(args):
             dtype=np.float32
         )
 
+        hf.create_dataset(
+            name='openl3_embedding',
+            shape=(audios_num, openl3_shape[0], openl3_shape[1]),
+            dtype=np.float32
+        )
+
         for n in range(audios_num):
             audio_name = meta_dict['audio_name'][n]
             fold = meta_dict['fold'][n]
@@ -141,6 +150,7 @@ def pack_audio_files_to_hdf5(args):
             hf['target'][n] = to_one_hot(meta_dict['target'][n], classes_num)
             hf['fold'][n] = meta_dict['fold'][n]
             hf['action_vector'][n] = meta_dict['action_vector'][n]
+            hf['openl3_embedding'][n] = meta_dict['openl3_embedding'][n]
 
     print("Write hdf5 to {}".format(packed_hdf5_path))
     print("Time {:.3f} s".format(time.time() - feature_time))
